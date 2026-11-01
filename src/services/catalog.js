@@ -1,0 +1,262 @@
+const PERIOD_ESSENTIALS_CATALOG = [
+  // 🍫 Dark Chocolates & PMS Treats
+  {
+    id: 'prod-dark-choco-70',
+    category: 'chocolate',
+    name: '70% Dark Belgian Chocolate Bar',
+    tagline: 'High magnesium for natural cramp relief',
+    description: 'Rich in polyphenols, flavonoids, and magnesium that reduce prostaglandin levels to ease uterine spasms and elevate dopamine during PMS.',
+    price: 90,
+    emoji: '🍫',
+    badge: 'Magnesium Rich',
+    badgeColor: '#5c3d2e',
+    unit: '80g Bar',
+    inStock: true,
+  },
+  {
+    id: 'prod-pms-almond-bar',
+    category: 'chocolate',
+    name: 'Roasted Almond & Sea Salt Cacao Bar',
+    tagline: 'Satisfies intense sweet & salty cravings',
+    description: 'Perfect balance of organic cacao and crunchy almonds. Replenishes healthy fats and curbs luteal phase hunger spikes.',
+    price: 75,
+    emoji: '🌰',
+    badge: 'PMS Craving Fix',
+    badgeColor: '#8d5b4c',
+    unit: '60g Bar',
+    inStock: true,
+  },
+
+  // ♨️ Hot Water Bag & Heat Therapy
+  {
+    id: 'prod-hot-water-bottle',
+    category: 'heat',
+    name: 'Plush Velvet Hot Water Bag',
+    tagline: 'Instant soothing warmth for abdominal cramps',
+    description: '2-Litre high-grade leakproof rubber with an ultra-soft washable velvet fleece cover. Keeps heat for up to 6 hours to relax pelvic muscles.',
+    price: 199,
+    emoji: '♨️',
+    badge: 'Top Cramp Reliever',
+    badgeColor: '#b71c1c',
+    unit: '2 Litre Bag + Cover',
+    inStock: true,
+  },
+  {
+    id: 'prod-heating-patches',
+    category: 'heat',
+    name: 'Herbal Self-Heating Cramp Patches',
+    tagline: 'Discreet 8-hour heat under clothes',
+    description: 'Air-activated warming patches with ginger, eucalyptus and wormwood. Stick directly to panties for invisible on-the-go relief at work or college.',
+    price: 149,
+    emoji: '🔥',
+    badge: '8-Hr Portable Heat',
+    badgeColor: '#d84315',
+    unit: 'Pack of 3 Patches',
+    inStock: true,
+  },
+
+  // 🩸 Menstrual Cups & Tampons
+  {
+    id: 'prod-menstrual-cup',
+    category: 'cup',
+    name: 'Medical-Grade Silicone Menstrual Cup',
+    tagline: '100% leakproof, zero rash, 12-hr freedom',
+    description: 'Ultra-soft, BPA-free US FDA approved medical silicone. Reusable for up to 5 years. Available in Small (light/teens), Medium (regular), and Large.',
+    price: 299,
+    emoji: '🩸',
+    badge: '5-Year Reusable',
+    badgeColor: '#880e4f',
+    unit: '1 Cup + Breathable Pouch',
+    sizes: ['Small', 'Medium', 'Large'],
+    inStock: true,
+  },
+  {
+    id: 'prod-cup-sterilizer',
+    category: 'cup',
+    name: 'Menstrual Cup Wash & Sterilizer',
+    tagline: '100% plant-based antibacterial formula',
+    description: 'Gentle, pH-balanced foaming wash cleans silicone cups and discs without degrading the material. Keeps your cup odor-free and hygienic.',
+    price: 179,
+    emoji: '🧴',
+    badge: 'Antibacterial',
+    badgeColor: '#4a148c',
+    unit: '100ml Pump Bottle',
+    inStock: true,
+  },
+  {
+    id: 'prod-organic-tampons',
+    category: 'tampons',
+    name: 'Organic Cotton Tampons with Applicator',
+    tagline: 'Chlorine-free, zero perfume, easy insertion',
+    description: '100% certified organic cotton tampons with smooth cardboard applicator. Compact and pocket-friendly for swimming, sports, and active days.',
+    price: 160,
+    emoji: '🌸',
+    badge: 'Zero Synthetics',
+    badgeColor: '#ad1457',
+    unit: 'Pack of 8 Tampons',
+    sizes: ['Regular', 'Super'],
+    inStock: true,
+  },
+
+  // 🌸 Pads & Pantyliners
+  {
+    id: 'prod-day-pads-ultra',
+    category: 'pads',
+    name: 'Ultra-Thin Day Pads with Wings',
+    tagline: 'Breathable cottony-soft feel for work & study',
+    description: '240mm length with gel-lock core and side leak guards. Completely rash-free and discreetly wrapped.',
+    price: 35,
+    emoji: '🌸',
+    badge: 'Day Protection',
+    badgeColor: '#c2185b',
+    unit: 'Pack of 2 Pads',
+    sizes: ['Regular (240mm)', 'XL (280mm)'],
+    inStock: true,
+  },
+  {
+    id: 'prod-night-pads-xxl',
+    category: 'pads',
+    name: 'XXL Heavy Flow Overnight Pads',
+    tagline: 'Wide fan back for 360° stain-free sleep',
+    description: '320mm extra-long night pads with deep absorbent channels that lock heavy flow and prevent back staining in any sleeping position.',
+    price: 45,
+    emoji: '🌙',
+    badge: 'Overnight Guard',
+    badgeColor: '#4a148c',
+    unit: 'Pack of 2 Pads',
+    sizes: ['XXL (320mm)'],
+    inStock: true,
+  },
+  {
+    id: 'prod-bamboo-pads',
+    category: 'pads',
+    name: '100% Organic Bamboo Cotton Pads',
+    tagline: 'Naturally hypoallergenic and antibacterial',
+    description: 'Made from sustainably harvested bamboo fiber. 3x more absorbent than regular cotton and naturally anti-odor for sensitive skin.',
+    price: 60,
+    emoji: '🎋',
+    badge: 'Sensitive Skin',
+    badgeColor: '#2e7d32',
+    unit: 'Pack of 2 Pads',
+    inStock: true,
+  },
+  {
+    id: 'prod-pantyliners',
+    category: 'pads',
+    name: 'Daily Cotton Breathable Pantyliners',
+    tagline: 'For ovulation discharge, spotting & cup backup',
+    description: 'Feather-light 155mm breathable liners. Keeps you fresh all day during ovulation discharge or when your flow is ending.',
+    price: 75,
+    emoji: '✨',
+    badge: 'Daily Freshness',
+    badgeColor: '#00695c',
+    unit: 'Pack of 20 Liners',
+    inStock: true,
+  },
+
+  // 🌿 Cramp Roll-Ons & Herbal Teas
+  {
+    id: 'prod-cramp-rollon',
+    category: 'relief',
+    name: 'Ayurvedic Cramp Relief Roll-On',
+    tagline: 'Instant cooling botanical relief on skin',
+    description: 'Enriched with peppermint oil, eucalyptus, and wintergreen. Absorbs within 30 seconds to numb throbbing pelvic and lower back cramps.',
+    price: 129,
+    emoji: '🌿',
+    badge: 'Fast Acting',
+    badgeColor: '#1b5e20',
+    unit: '10ml Roll-On',
+    inStock: true,
+  },
+  {
+    id: 'prod-cramp-tea',
+    category: 'relief',
+    name: 'Chamomile & Ginger Cramp Ease Tea',
+    tagline: 'Warm herbal infusion that soothes spasms',
+    description: 'Caffeine-free therapeutic blend of chamomile, dried ginger root, fennel seeds, and spearmint. Relaxes smooth muscles and reduces gas bloating.',
+    price: 140,
+    emoji: '🍵',
+    badge: 'Caffeine Free',
+    badgeColor: '#33691e',
+    unit: '15 Pyramid Tea Bags',
+    inStock: true,
+  },
+
+  // 🧼 Intimate Hygiene & Care
+  {
+    id: 'prod-intimate-wash',
+    category: 'hygiene',
+    name: 'pH 3.5 Gentle Intimate Wash',
+    tagline: 'Maintains healthy vaginal microflora',
+    description: 'Infused with tea tree oil, aloe vera, and lactic acid. Free of parabens and harsh sulphates. Prevents bacterial irritation during periods.',
+    price: 125,
+    emoji: '🧼',
+    badge: 'pH 3.5 Balanced',
+    badgeColor: '#00838f',
+    unit: '100ml Bottle',
+    inStock: true,
+  },
+  {
+    id: 'prod-intimate-wipes',
+    category: 'hygiene',
+    name: 'Biodegradable Soothing Intimate Wipes',
+    tagline: 'Mess-free freshness when changing pads outside',
+    description: '100% viscose biodegradable wipes soaked in chamomile and aloe water. Hypoallergenic, alcohol-free, and safe for intimate skin.',
+    price: 60,
+    emoji: '🍃',
+    badge: 'Flushable & Soft',
+    badgeColor: '#004d40',
+    unit: 'Pack of 10 Wipes',
+    inStock: true,
+  },
+
+  // 🎁 All-in-One Care Kits
+  {
+    id: 'prod-emergency-care-kit',
+    category: 'kits',
+    name: 'Complete SOS Period Comfort Box',
+    tagline: 'Pads + Hot Patch + Dark Chocolate + Pouch',
+    description: 'The ultimate emergency rescue box! Contains: 2x Day Pads + 1x Night Pad + 1x Self-Heating Patch + 1x Dark Chocolate Bar + 1x Herbal Tea + Discreet Pouch.',
+    price: 249,
+    emoji: '🎁',
+    badge: 'Complete Comfort',
+    badgeColor: '#6a1b9a',
+    unit: 'Full Rescue Box',
+    inStock: true,
+  },
+];
+
+const CATALOG_CATEGORIES = [
+  { id: 'all', label: '✨ All Essentials' },
+  { id: 'chocolate', label: '🍫 Dark Chocolate' },
+  { id: 'heat', label: '♨️ Hot Water Bag & Heat' },
+  { id: 'cup', label: '🩸 Menstrual Cups' },
+  { id: 'pads', label: '🌸 Pads & Liners' },
+  { id: 'tampons', label: '🩸 Tampons' },
+  { id: 'relief', label: '🌿 Cramp Roll-Ons & Teas' },
+  { id: 'hygiene', label: '🧼 Intimate Hygiene' },
+  { id: 'kits', label: '🎁 Period Care Kits' },
+];
+
+function getCatalog(category) {
+  if (!category || category === 'all') {
+    return PERIOD_ESSENTIALS_CATALOG;
+  }
+  return PERIOD_ESSENTIALS_CATALOG.filter((item) => item.category === category);
+}
+
+function getCategories() {
+  return CATALOG_CATEGORIES;
+}
+
+function getItemById(id) {
+  return PERIOD_ESSENTIALS_CATALOG.find((item) => item.id === id);
+}
+
+module.exports = {
+  PERIOD_ESSENTIALS_CATALOG,
+  CATALOG_CATEGORIES,
+  getCatalog,
+  getCategories,
+  getItemById,
+};
