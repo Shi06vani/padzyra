@@ -277,10 +277,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.miniPlanChipText}>₹50 Starter</Text>
                 </View>
                 <View style={[styles.miniPlanChip, styles.miniPlanChipPopular]}>
-                  <Text style={[styles.miniPlanChipText, { color: colors.white }]}>₹100 Pro ⭐</Text>
+                  <Text style={[styles.miniPlanChipText, { color: colors.white }]}>₹100 Pro</Text>
                 </View>
                 <View style={styles.miniPlanChip}>
-                  <Text style={styles.miniPlanChipText}>₹250 VIP 👑</Text>
+                  <Text style={styles.miniPlanChipText}>₹250 VIP</Text>
                 </View>
               </View>
 
@@ -603,14 +603,73 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <Text style={styles.cardHeader}>SERVER CONNECTION</Text>
         </View>
         <Text style={styles.settingSub}>
-          Connect app to your backend API server (e.g., 10.0.2.2:3000 for Android or localhost:3000 for iOS)
+          Switch backend server between Production Live (Render) and Localhost development:
         </Text>
+
+        <View style={styles.serverEnvRow}>
+          <TouchableOpacity
+            style={[
+              styles.serverEnvBtn,
+              serverUrl.includes('onrender.com') && styles.serverEnvBtnActive,
+            ]}
+            onPress={() => {
+              setServerUrl(ApiConfig.PRODUCTION_URL);
+              ApiConfig.setBaseUrl(ApiConfig.PRODUCTION_URL);
+            }}
+          >
+            <Ionicons
+              name="globe-outline"
+              size={15}
+              color={serverUrl.includes('onrender.com') ? colors.white : colors.plum}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              style={[
+                styles.serverEnvText,
+                serverUrl.includes('onrender.com') && styles.serverEnvTextActive,
+              ]}
+            >
+              Production Live
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.serverEnvBtn,
+              !serverUrl.includes('onrender.com') && styles.serverEnvBtnActive,
+            ]}
+            onPress={() => {
+              setServerUrl(ApiConfig.LOCAL_URL);
+              ApiConfig.setBaseUrl(ApiConfig.LOCAL_URL);
+            }}
+          >
+            <Ionicons
+              name="laptop-outline"
+              size={15}
+              color={!serverUrl.includes('onrender.com') ? colors.white : colors.plum}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              style={[
+                styles.serverEnvText,
+                !serverUrl.includes('onrender.com') && styles.serverEnvTextActive,
+              ]}
+            >
+              Local Server
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <TextInput
           value={serverUrl}
-          onChangeText={setServerUrl}
+          onChangeText={(text) => {
+            setServerUrl(text);
+            ApiConfig.setBaseUrl(text);
+          }}
           style={styles.serverInput}
           autoCapitalize="none"
           autoCorrect={false}
+          placeholder="https://..."
         />
       </Card>
 
@@ -997,5 +1056,35 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.line,
     marginVertical: 16,
+  },
+  serverEnvRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  serverEnvBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    backgroundColor: colors.white,
+  },
+  serverEnvBtnActive: {
+    backgroundColor: colors.plum,
+    borderColor: colors.plum,
+  },
+  serverEnvText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.plum,
+  },
+  serverEnvTextActive: {
+    color: colors.white,
   },
 });

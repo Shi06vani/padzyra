@@ -77,7 +77,8 @@ async function sendReminder(email, token) {
   const transport = getTransport();
   if (!transport || !email) return;
   const port = process.env.PORT || 3000;
-  const link = token ? `http://localhost:${port}/#/act?token=${encodeURIComponent(token)}` : '';
+  const appBase = process.env.APP_URL || (process.env.NODE_ENV === 'production' ? 'https://padzyra.onrender.com' : `http://localhost:${port}`);
+  const link = token ? `${appBase}/#/act?token=${encodeURIComponent(token)}` : '';
   const text = link ? `Reminder\n\n${link}` : 'Reminder';
   await transport.sendMail({
     from: process.env.SMTP_FROM || `"Padzyra" <${process.env.SMTP_USER || 'no-reply@padzyra.local'}>`,

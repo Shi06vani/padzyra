@@ -882,8 +882,9 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
                 <Ionicons name="notifications-circle" size={18} color={colors.rose} style={{ marginRight: 6 }} />
                 <Text style={styles.cardHeader}>FIREBASE CLOUD REMINDERS</Text>
               </View>
-              <View style={[styles.badgeContainer, { backgroundColor: '#e8f5e9' }]}>
-                <Text style={[styles.badgeText, { color: '#2e7d32' }]}>FCM Active ⚡</Text>
+              <View style={[styles.fcmBadge, { backgroundColor: '#e8f5e9' }]}>
+                <Ionicons name="flash-outline" size={11} color="#2e7d32" style={{ marginRight: 3 }} />
+                <Text style={[styles.fcmBadgeText, { color: '#2e7d32' }]}>FCM Active</Text>
               </View>
             </View>
             <Text style={styles.mutedText}>
@@ -892,7 +893,7 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
 
             <View style={{ marginTop: 12 }}>
               <TouchableOpacity
-                style={[styles.primaryActionBtn, { backgroundColor: colors.plum, marginBottom: 8 }]}
+                style={[styles.fcmSubmitBtn, { backgroundColor: colors.plum, marginBottom: 8 }]}
                 activeOpacity={0.8}
                 onPress={() => handleSendReminder('test')}
                 disabled={sendingReminder}
@@ -902,7 +903,7 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
                 ) : (
                   <>
                     <Ionicons name="paper-plane-outline" size={16} color={colors.white} style={{ marginRight: 6 }} />
-                    <Text style={styles.primaryActionText}>Send Test Reminder (Firebase)</Text>
+                    <Text style={styles.fcmSubmitBtnText}>Send Test Reminder (Firebase)</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -1739,5 +1740,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.rose,
     lineHeight: 18,
+  },
+  fcmBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  fcmBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  fcmSubmitBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  fcmSubmitBtnText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

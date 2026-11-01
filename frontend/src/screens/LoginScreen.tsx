@@ -193,8 +193,110 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onOtpRequested }) => {
               <Text style={styles.errorText}>{errorMessage}</Text>
             ) : null}
           </Card>
+
+          {/* Environment Switcher Trigger */}
+          <TouchableOpacity
+            style={styles.serverConfigTrigger}
+            onPress={() => {
+              setServerUrl(ApiConfig.getBaseUrl());
+              setShowConfig(true);
+            }}
+          >
+            <View style={styles.serverBadge}>
+              <View
+                style={[
+                  styles.statusDot,
+                  ApiConfig.isProduction() ? styles.statusDotLive : styles.statusDotLocal,
+                ]}
+              />
+              <Text style={styles.serverConfigText}>
+                Server: {ApiConfig.isProduction() ? 'Production (Live)' : 'Local Host'}
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Server Environment Modal */}
+      <Modal
+        visible={showConfig}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowConfig(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Backend Server</Text>
+            <Text style={styles.modalSubtitle}>
+              Select the backend environment or customize the URL:
+            </Text>
+
+            <View style={styles.envPresetRow}>
+              <TouchableOpacity
+                style={[
+                  styles.envPresetBtn,
+                  serverUrl.includes('onrender.com') && styles.envPresetBtnActive,
+                ]}
+                onPress={() => setServerUrl(ApiConfig.PRODUCTION_URL)}
+              >
+                <Text
+                  style={[
+                    styles.envPresetText,
+                    serverUrl.includes('onrender.com') && styles.envPresetTextActive,
+                  ]}
+                >
+                  🌐 Production Live
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.envPresetBtn,
+                  !serverUrl.includes('onrender.com') && styles.envPresetBtnActive,
+                ]}
+                onPress={() => setServerUrl(ApiConfig.LOCAL_URL)}
+              >
+                <Text
+                  style={[
+                    styles.envPresetText,
+                    !serverUrl.includes('onrender.com') && styles.envPresetTextActive,
+                  ]}
+                >
+                  💻 Local Host
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              value={serverUrl}
+              onChangeText={setServerUrl}
+              style={styles.modalInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="https://..."
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setShowConfig(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSave}
+                onPress={() => {
+                  ApiConfig.setBaseUrl(serverUrl);
+                  setServerUrl(ApiConfig.getBaseUrl());
+                  setShowConfig(false);
+                }}
+              >
+                <Text style={styles.modalSaveText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -262,16 +364,63 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   serverConfigTrigger: {
-    marginTop: 24,
+    marginTop: 20,
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
+  serverBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eedde7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  statusDotLive: {
+    backgroundColor: '#10b981',
+  },
+  statusDotLocal: {
+    backgroundColor: '#f59e0b',
+  },
   serverConfigText: {
-    color: colors.rose,
+    color: colors.plum,
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  envPresetRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  envPresetBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    alignItems: 'center',
+    backgroundColor: colors.blush,
+  },
+  envPresetBtnActive: {
+    borderColor: colors.plum,
+    backgroundColor: '#eedde7',
+  },
+  envPresetText: {
     fontSize: 12,
     fontWeight: '600',
-    textAlign: 'center',
-    opacity: 0.8,
+    color: colors.rose,
+  },
+  envPresetTextActive: {
+    color: colors.plum,
+    fontWeight: '800',
   },
   modalOverlay: {
     flex: 1,

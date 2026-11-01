@@ -50,33 +50,33 @@ const TOPIC_TAGS = [
 ];
 
 const FEELING_OPTIONS = [
-  '😣 Cramping Hard',
-  '🍫 Craving Chocolate',
-  '😭 Emotional Day',
-  '😴 Low Energy / Sleepy',
-  '✨ Bloated but Cute',
-  '💪 Feeling Strong',
-  '🧘 Sweet Relief',
+  'Cramping & Pelvic Tension',
+  'Nutrition & Food Cravings',
+  'Emotional / PMS Rollercoaster',
+  'Low Energy & Fatigue',
+  'Bloating & Water Retention',
+  'Energized & Productive',
+  'Comfort & Relief',
 ];
 
 const PRESET_ALIASES = [
-  'Anonymous Sis 🌸',
-  'Cozy Butterfly 🦋',
-  'Choco Craver 🍫',
-  'Warm Bottle Girl ☕',
-  'Moon Flower 🌙',
-  'Flow Warrior 🛡️',
+  'Care Companion',
+  'Wellness Seeker',
+  'Cycle Ally',
+  'Mindful Peer',
+  'Quiet Voice',
+  'Supportive Member',
 ];
 
 // Fallback seed threads if network is unavailable
 const SEED_THREADS: Thread[] = [
   {
     id: 'seed-1',
-    authorName: 'Cozy Butterfly 🦋',
+    authorName: 'Care Companion',
     isAnonymous: true,
-    content: 'Day 2 cramps are no joke today 😭 Hot water bottle + peppermint tea is literally keeping me alive right now. Sending warmth to all my sisters going through it today! ☕❤️',
+    content: 'Day 2 cramps are quite heavy today. A hot water bag plus warm chamomile tea is really helping soothe the spasms. Sending strength to anyone else navigating their cycle today!',
     tag: 'cramps',
-    feeling: '😣 Cramping Hard',
+    feeling: 'Cramping & Pelvic Tension',
     likesCount: 24,
     hugsCount: 18,
     repliesCount: 2,
@@ -85,25 +85,25 @@ const SEED_THREADS: Thread[] = [
     replies: [
       {
         id: 'r-1',
-        authorName: 'Lavender Girl 🌸',
-        content: 'Stay cozy girl! Adding a dash of ginger powder in warm water helps me so much.',
+        authorName: 'Wellness Seeker',
+        content: 'Stay warm and hydrated! A pinch of dried ginger in warm water works wonders for pelvic blood flow.',
         createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
       },
       {
         id: 'r-2',
-        authorName: 'Warm Blanket ☕',
-        content: 'Also try child pose stretch for 5 mins, eases lower back tension right away!',
+        authorName: 'Mindful Peer',
+        content: 'A gentle child pose stretch for 5 minutes also releases lower back and sacral tightness right away.',
         createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
       },
     ],
   },
   {
     id: 'seed-2',
-    authorName: 'Choco Craver 🍫',
+    authorName: 'Mindful Peer',
     isAnonymous: true,
-    content: 'Anyone else get the most bizarre cravings during PMS? I just dipped potato chips in Nutella and it felt like Michelin star dining 🤤 No regrets whatsoever!',
+    content: 'High magnesium dark chocolate (70%+) combined with roasted almonds completely stabilized my luteal phase cravings this afternoon. Highly recommend keeping a bar stocked in your pantry.',
     tag: 'cravings',
-    feeling: '🍫 Craving Chocolate',
+    feeling: 'Nutrition & Food Cravings',
     likesCount: 42,
     hugsCount: 12,
     repliesCount: 1,
@@ -112,19 +112,19 @@ const SEED_THREADS: Thread[] = [
     replies: [
       {
         id: 'r-3',
-        authorName: 'Snack Queen 🥨',
-        content: 'Sweet and salty combo is top tier during period week!! 😋',
+        authorName: 'Supportive Member',
+        content: 'Dark cacao has real clinical backing for smooth muscle relaxation — excellent choice!',
         createdAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
       },
     ],
   },
   {
     id: 'seed-3',
-    authorName: 'Anonymous Sis 🌸',
+    authorName: 'Cycle Ally',
     isAnonymous: true,
-    content: 'PSA for all girls: Padzyra discreet emergency delivery literally saved me at college today. Reached in 12 mins in a completely discreet paper bag! Blessed to have this app.',
+    content: 'Padzyra discreet emergency delivery arrived in under 15 minutes in an opaque sealed kraft bag today at my workplace. Truly thankful for the thoughtful packaging and discreet code handoff.',
     tag: 'tips',
-    feeling: '🧘 Sweet Relief',
+    feeling: 'Comfort & Relief',
     likesCount: 56,
     hugsCount: 30,
     repliesCount: 0,
@@ -134,11 +134,11 @@ const SEED_THREADS: Thread[] = [
   },
   {
     id: 'seed-4',
-    authorName: 'Moonlight Flow 🌙',
+    authorName: 'Quiet Voice',
     isAnonymous: true,
-    content: 'Crying because a puppy in a reel didn’t get a treat... Yup, luteal phase emotional rollercoaster has officially begun 😭 Love to everyone whose emotions feel heightened this week.',
+    content: 'Luteal phase hormones definitely make sensitivity and empathy peak during days 24 to 28. Remember to give yourself grace and schedule restorative breaks today.',
     tag: 'mood',
-    feeling: '😭 Emotional Day',
+    feeling: 'Emotional / PMS Rollercoaster',
     likesCount: 38,
     hugsCount: 27,
     repliesCount: 0,
@@ -305,7 +305,7 @@ export const ThreadsScreen: React.FC = () => {
   const handleShare = async (thread: Thread) => {
     try {
       await Share.share({
-        message: `"${thread.content}" — ${thread.authorName} on Padzyra Period Threads 🌸`,
+        message: `"${thread.content}" — ${thread.authorName} on Padzyra Community`,
       });
     } catch {
       // Ignore
@@ -331,7 +331,7 @@ export const ThreadsScreen: React.FC = () => {
     if (!activeThreadForReplies || !replyText.trim()) return;
 
     setSubmittingReply(true);
-    const authorName = userSubscription?.active ? 'VIP Sister 👑' : 'Sister 🌸';
+    const authorName = userSubscription?.active ? 'VIP Member' : 'Community Member';
 
     try {
       const reply = await PadzyraApi.replyThread(activeThreadForReplies.id, {
@@ -501,7 +501,7 @@ export const ThreadsScreen: React.FC = () => {
             onPress={() => setShowComposer(true)}
           >
             <View style={styles.quickShareAvatar}>
-              <Text style={{ fontSize: 16 }}>🌸</Text>
+              <Ionicons name="chatbubble-ellipses-outline" size={17} color={colors.plum} />
             </View>
             <Text style={styles.quickSharePlaceholder}>
               How are you feeling this cycle? Share a thought...
@@ -519,16 +519,8 @@ export const ThreadsScreen: React.FC = () => {
                 {/* Left Column: Avatar + Connector line */}
                 <View style={styles.threadLeftCol}>
                   <View style={styles.avatarCircle}>
-                    <Text style={styles.avatarEmoji}>
-                      {thread.authorName.includes('🍫')
-                        ? '🍫'
-                        : thread.authorName.includes('🦋')
-                        ? '🦋'
-                        : thread.authorName.includes('☕')
-                        ? '☕'
-                        : thread.authorName.includes('🌙')
-                        ? '🌙'
-                        : '🌸'}
+                    <Text style={styles.avatarInitial}>
+                      {(thread.authorName || 'M').charAt(0).toUpperCase()}
                     </Text>
                   </View>
                   <View style={styles.connectorLine} />
@@ -796,14 +788,14 @@ export const ThreadsScreen: React.FC = () => {
               {(!activeThreadForReplies?.replies || activeThreadForReplies.replies.length === 0) ? (
                 <View style={styles.emptyReplies}>
                   <Text style={styles.emptyRepliesText}>
-                    Be the first sister to comfort or reply! 🌸
+                    Be the first member to comfort or reply!
                   </Text>
                 </View>
               ) : (
                 activeThreadForReplies.replies.map((reply) => (
                   <View key={reply.id} style={styles.replyItem}>
                     <View style={styles.replyAvatar}>
-                      <Text style={{ fontSize: 13 }}>🌸</Text>
+                      <Ionicons name="person-outline" size={13} color={colors.plum} />
                     </View>
                     <View style={{ flex: 1, marginLeft: 10 }}>
                       <View style={styles.replyHeaderRow}>
@@ -1088,8 +1080,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarEmoji: {
-    fontSize: 18,
+  avatarInitial: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.plum,
   },
   connectorLine: {
     width: 2,

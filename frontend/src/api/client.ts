@@ -1,21 +1,47 @@
 import { Platform } from 'react-native';
 
-const DEFAULT_BASE_URL = Platform.select({
+export const PRODUCTION_BASE_URL = 'https://padzyra.onrender.com/api/v1';
+
+export const LOCAL_BASE_URL = Platform.select({
   android: 'http://10.0.2.2:3000/api/v1',
   ios: 'http://localhost:3000/api/v1',
   default: 'http://localhost:3000/api/v1',
-});
+}) as string;
 
-let customBaseUrl = DEFAULT_BASE_URL;
+// Default to production live backend, with instant toggle to local
+let customBaseUrl = PRODUCTION_BASE_URL;
 let authToken: string | null = null;
 let cookieHeader: string | null = null;
 
 export const ApiConfig = {
+  PRODUCTION_URL: PRODUCTION_BASE_URL,
+  LOCAL_URL: LOCAL_BASE_URL,
+
   getBaseUrl(): string {
     return customBaseUrl;
   },
   setBaseUrl(url: string) {
-    customBaseUrl = url.trim().replace(/\/+$/, '');
+    let clean = (url || '').trim().replace(/\/+$/, '');
+    if (clean && !clean.endsWith('/api/v1')) {
+      clean = `${clean}/api/v1`;
+    }
+    customBaseUrl = clean || PRODUCTION_BASE_URL;
+  },
+  useProduction() {
+    customBaseUrl = PRODUCTION_BASE_URL;
+  },
+  useLocal() {
+    customBaseUrl = LOCAL_BASE_URL;
+  },
+  isProduction(): boolean {
+    return customBaseUrl.includes('onrender.com');
+  },
+  isLocal(): boolean {
+    return (
+      customBaseUrl.includes('10.0.2.2') ||
+      customBaseUrl.includes('localhost') ||
+      customBaseUrl.includes('127.0.0.1')
+    );
   },
   getAuthToken(): string | null {
     return authToken;
