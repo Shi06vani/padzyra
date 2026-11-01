@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { send, sendEmpty } = require('../utils/respond');
 const { required, oneOf, pointOf } = require('../utils/validate');
 const { requireRole, requirePin } = require('../middleware/auth');
-const { nextAlert, actWithToken, dispatchAllAlerts } = require('../services/alerts');
+const { nextAlert, actWithToken, dispatchAllAlerts, sendDirectReminder } = require('../services/alerts');
 const { startToday, endToday, usePad } = require('../services/period');
 const env = require('../config/env');
 
@@ -127,4 +127,28 @@ router.get('/notifications/history', requireRole('girl'), requirePin, asyncHandl
   })));
 }));
 
+router.post('/notifications/reminder', requireRole('girl'), asyncHandler(async (req, res) => {
+  const kind = req.body.kind || 'test';
+  const customTitle = req.body.title;
+  const customBody = req.body.body;
+  const result = await sendDirectReminder(req.auth.user, { kind, customTitle, customBody });
+  send(res, result, 201);
+}));
+
+router.post('/notifications/test', requireRole('girl'), asyncHandler(async (req, res) => {
+  const result = await sendDirectReminder(req.auth.user, { kind: 'test' });
+  send(res, result, 201);
+}));
+
+router.get('/notifications/fcm/status', requireRole('girl'), asyncHandler(async (req, res) => {
+  const admin = fcm.getAdmin();
+  const tokens = await db.FcmToken.findAll({ where: { userId: req.auth.user.id } });
+  send(res, {
+    firebaseInitialized: !!admin,
+    tokensCount: tokens.length,
+    tokens: tokens.map((t) => ({ id: t.id, platform: t.platform, registeredAt: t.createdAt })),
+  });
+}));
+
 module.exports = router;
+

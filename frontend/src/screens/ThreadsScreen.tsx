@@ -40,13 +40,13 @@ interface Thread {
 }
 
 const TOPIC_TAGS = [
-  { id: 'all', label: '🌸 All Thoughts' },
-  { id: 'cramps', label: '😣 Cramps & Pain' },
-  { id: 'cravings', label: '🍫 Cravings & Food' },
-  { id: 'mood', label: '😭 PMS & Mood' },
-  { id: 'tips', label: '💡 Hacks & Tips' },
-  { id: 'first_period', label: '💖 First Period' },
-  { id: 'rants', label: '🩸 Flow Rants' },
+  { id: 'all', label: 'All', icon: 'chatbubbles-outline' },
+  { id: 'cramps', label: 'Cramps & Pain', icon: 'pulse-outline' },
+  { id: 'cravings', label: 'Cravings & Food', icon: 'cafe-outline' },
+  { id: 'mood', label: 'PMS & Mood', icon: 'sunny-outline' },
+  { id: 'tips', label: 'Hacks & Tips', icon: 'bulb-outline' },
+  { id: 'first_period', label: 'First Cycle', icon: 'heart-outline' },
+  { id: 'rants', label: 'Flow Talk', icon: 'water-outline' },
 ];
 
 const FEELING_OPTIONS = [
@@ -396,35 +396,21 @@ export const ThreadsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Top App Bar */}
+      {/* Clean Top Header */}
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
-          <Text style={styles.brandSubtitle}>PADZYRA VOICES</Text>
-          <View style={styles.brandTitleRow}>
-            <Text style={styles.brandTitle}>Period Threads</Text>
-            <Text style={styles.threadsLogo}>🌸</Text>
-          </View>
+          <Text style={styles.brandTitle}>Community</Text>
+          <Text style={styles.brandSubtitle}>Anonymous sisterhood discussions</Text>
         </View>
 
         <View style={styles.topBarRight}>
-          <TouchableOpacity
-            style={styles.vipClubBtn}
-            onPress={() => setShowSubscriptionModal(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="sparkles" size={13} color="#6b3d62" style={{ marginRight: 3 }} />
-            <Text style={styles.vipClubText}>
-              {userSubscription?.active ? 'Club VIP' : 'Padzyra Plus'}
-            </Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.newPostBtn}
             activeOpacity={0.85}
             onPress={() => setShowComposer(true)}
           >
-            <Ionicons name="create-outline" size={17} color={colors.white} style={{ marginRight: 4 }} />
-            <Text style={styles.newPostBtnText}>Post</Text>
+            <Ionicons name="create-outline" size={16} color={colors.white} style={{ marginRight: 4 }} />
+            <Text style={styles.newPostBtnText}>New Post</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -444,6 +430,12 @@ export const ThreadsScreen: React.FC = () => {
                 onPress={() => setActiveTag(tag.id)}
                 style={[styles.categoryChip, isActive && styles.categoryChipActive]}
               >
+                <Ionicons
+                  name={tag.icon as any}
+                  size={14}
+                  color={isActive ? colors.white : colors.plum}
+                  style={{ marginRight: 5 }}
+                />
                 <Text
                   style={[
                     styles.categoryChipText,

@@ -6,6 +6,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../theme/colors';
@@ -18,11 +20,13 @@ import { PadzyraApi } from '../api/client';
 interface PinLockScreenProps {
   isSettingPin?: boolean;
   onUnlocked: () => void;
+  onForgotPin?: () => void;
 }
 
 export const PinLockScreen: React.FC<PinLockScreenProps> = ({
   isSettingPin = false,
   onUnlocked,
+  onForgotPin,
 }) => {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,6 +55,23 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPinPress = () => {
+    Alert.alert(
+      'Forgot PIN?',
+      'You can reset your security PIN by verifying your identity with an OTP code.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset PIN',
+          style: 'destructive',
+          onPress: () => {
+            if (onForgotPin) onForgotPin();
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -100,6 +121,16 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
               style={styles.openButton}
             />
 
+            {!isSettingPin && onForgotPin ? (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleForgotPinPress}
+                style={styles.forgotPinButton}
+              >
+                <Text style={styles.forgotPinText}>Forgot PIN?</Text>
+              </TouchableOpacity>
+            ) : null}
+
             {errorMessage ? (
               <Text style={styles.errorText}>{errorMessage}</Text>
             ) : null}
@@ -137,6 +168,17 @@ const styles = StyleSheet.create({
   },
   openButton: {
     marginTop: 8,
+  },
+  forgotPinButton: {
+    marginTop: 16,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  forgotPinText: {
+    color: colors.rose,
+    fontSize: 14,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   errorText: {
     color: colors.warn,

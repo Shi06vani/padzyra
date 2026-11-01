@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../theme/colors';
 
@@ -31,40 +32,45 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   onSelectTab,
   role,
 }) => {
+  const insets = useSafeAreaInsets();
+
   const tabs: TabItem[] =
     role === 'shop'
       ? [
           { key: 'shop', label: 'Shop', icon: 'storefront-outline', iconActive: 'storefront' },
           { key: 'shop-orders', label: 'Orders', icon: 'receipt-outline', iconActive: 'receipt' },
-          { key: 'settings', label: 'Settings', icon: 'settings-outline', iconActive: 'settings' },
+          { key: 'settings', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
         ]
       : [
-          { key: 'home', label: 'Home', icon: 'home-outline', iconActive: 'home' },
-          { key: 'calendar', label: 'Dates', icon: 'calendar-outline', iconActive: 'calendar' },
-          { key: 'threads', label: 'Threads', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
-          { key: 'now', label: 'Now', icon: 'flash-outline', iconActive: 'flash' },
-          { key: 'activity', label: 'Activity', icon: 'receipt-outline', iconActive: 'receipt' },
-          { key: 'settings', label: 'You', icon: 'person-outline', iconActive: 'person' },
+          { key: 'home', label: 'Today', icon: 'flower-outline', iconActive: 'flower' },
+          { key: 'calendar', label: 'Cycle', icon: 'calendar-outline', iconActive: 'calendar' },
+          { key: 'now', label: 'Care', icon: 'bag-handle-outline', iconActive: 'bag-handle' },
+          { key: 'threads', label: 'Community', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
+          { key: 'settings', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
         ];
 
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 8);
+
   return (
-    <View style={styles.floatingContainer}>
+    <View style={[styles.floatingContainer, { bottom: bottomInset }]}>
       <View style={styles.bar}>
         {tabs.map((tab) => {
-          const isActive = currentTab === tab.key;
+          // If current tab is 'activity', map it visually to 'now' (Care) tab
+          const isActive = currentTab === tab.key || (currentTab === 'activity' && tab.key === 'now');
           return (
             <TouchableOpacity
               key={tab.key}
-              activeOpacity={0.8}
+              activeOpacity={0.7}
               onPress={() => onSelectTab(tab.key)}
-              style={[styles.tabButton, isActive && styles.tabButtonActive]}
+              style={styles.tabButton}
             >
-              <Ionicons
-                name={isActive ? tab.iconActive : tab.icon}
-                size={16}
-                color={isActive ? colors.white : colors.rose}
-                style={styles.tabIcon}
-              />
+              <View style={[styles.iconWrapper, isActive && styles.iconWrapperActive]}>
+                <Ionicons
+                  name={isActive ? tab.iconActive : tab.icon}
+                  size={20}
+                  color={isActive ? colors.plum : colors.rose}
+                />
+              </View>
               <Text
                 numberOfLines={1}
                 style={[styles.tabText, isActive && styles.tabTextActive]}
@@ -82,50 +88,54 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
 const styles = StyleSheet.create({
   floatingContainer: {
     position: 'absolute',
-    bottom: 16,
-    left: 12,
-    right: 12,
+    left: 14,
+    right: 14,
     alignItems: 'center',
     zIndex: 10,
   },
   bar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 253, 252, 0.96)',
+    backgroundColor: '#ffffff',
     borderRadius: 24,
-    padding: 5,
-    shadowColor: '#c98cb0',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    shadowColor: '#6b3d62',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
     elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(243, 213, 228, 0.7)',
     width: '100%',
-    maxWidth: 440,
+    maxWidth: 420,
+    alignItems: 'center',
+    justifyContent: 'space-around',
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 7,
-    paddingHorizontal: 2,
-    borderRadius: 18,
+    paddingVertical: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tabButtonActive: {
-    backgroundColor: '#dc97c4',
-    shadowColor: colors.pink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tabIcon: {
+  iconWrapper: {
+    width: 38,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 2,
   },
+  iconWrapperActive: {
+    backgroundColor: 'rgba(244, 167, 197, 0.24)',
+  },
   tabText: {
-    fontSize: 10.5,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '500',
     color: colors.rose,
+    letterSpacing: 0.1,
   },
   tabTextActive: {
-    color: colors.white,
+    color: colors.plum,
+    fontWeight: '700',
   },
 });

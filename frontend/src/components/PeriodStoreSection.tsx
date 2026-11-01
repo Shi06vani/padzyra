@@ -20,7 +20,8 @@ export interface EssentialItem {
   tagline: string;
   description: string;
   price: number;
-  emoji: string;
+  icon: string;
+  emoji?: string;
   badge: string;
   badgeColor: string;
   unit: string;
@@ -29,7 +30,7 @@ export interface EssentialItem {
 }
 
 export const DEFAULT_ESSENTIALS: EssentialItem[] = [
-  // 🍫 Dark Chocolates & PMS Treats
+  // Dark Chocolates & PMS Treats
   {
     id: 'prod-dark-choco-70',
     category: 'chocolate',
@@ -37,7 +38,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'High magnesium for natural cramp relief',
     description: 'Rich in polyphenols, flavonoids, and magnesium that reduce prostaglandin levels to ease uterine spasms and elevate dopamine during PMS.',
     price: 90,
-    emoji: '🍫',
+    icon: 'nutrition-outline',
     badge: 'Magnesium Rich',
     badgeColor: '#5c3d2e',
     unit: '80g Bar',
@@ -50,14 +51,14 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Satisfies intense sweet & salty cravings',
     description: 'Perfect balance of organic cacao and crunchy almonds. Replenishes healthy fats and curbs luteal phase hunger spikes.',
     price: 75,
-    emoji: '🌰',
+    icon: 'cube-outline',
     badge: 'PMS Craving Fix',
     badgeColor: '#8d5b4c',
     unit: '60g Bar',
     inStock: true,
   },
 
-  // ♨️ Hot Water Bag & Heat Therapy
+  // Hot Water Bag & Heat Therapy
   {
     id: 'prod-hot-water-bottle',
     category: 'heat',
@@ -65,7 +66,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Instant soothing warmth for abdominal cramps',
     description: '2-Litre high-grade leakproof rubber with an ultra-soft washable velvet fleece cover. Keeps heat for up to 6 hours to relax pelvic muscles.',
     price: 199,
-    emoji: '♨️',
+    icon: 'flame-outline',
     badge: 'Top Cramp Reliever',
     badgeColor: '#b71c1c',
     unit: '2 Litre Bag + Cover',
@@ -78,14 +79,14 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Discreet 8-hour heat under clothes',
     description: 'Air-activated warming patches with ginger, eucalyptus and wormwood. Stick directly to panties for invisible on-the-go relief at work or college.',
     price: 149,
-    emoji: '🔥',
+    icon: 'thermometer-outline',
     badge: '8-Hr Portable Heat',
     badgeColor: '#d84315',
     unit: 'Pack of 3 Patches',
     inStock: true,
   },
 
-  // 🩸 Menstrual Cups & Tampons
+  // Menstrual Cups & Tampons
   {
     id: 'prod-menstrual-cup',
     category: 'cup',
@@ -93,7 +94,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: '100% leakproof, zero rash, 12-hr freedom',
     description: 'Ultra-soft, BPA-free US FDA approved medical silicone. Reusable for up to 5 years. Available in Small (teens/light flow), Medium (regular), and Large (heavy flow).',
     price: 299,
-    emoji: '🩸',
+    icon: 'water-outline',
     badge: '5-Year Reusable',
     badgeColor: '#880e4f',
     unit: '1 Cup + Breathable Pouch',
@@ -107,7 +108,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: '100% plant-based antibacterial formula',
     description: 'Gentle, pH-balanced foaming wash cleans silicone cups and discs without degrading the material. Keeps your cup odor-free and hygienic.',
     price: 179,
-    emoji: '🧴',
+    icon: 'shield-checkmark-outline',
     badge: 'Antibacterial',
     badgeColor: '#4a148c',
     unit: '100ml Pump Bottle',
@@ -120,7 +121,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Chlorine-free, zero perfume, easy insertion',
     description: '100% certified organic cotton tampons with smooth cardboard applicator. Compact and pocket-friendly for swimming, sports, and active days.',
     price: 160,
-    emoji: '🌸',
+    icon: 'medical-outline',
     badge: 'Zero Synthetics',
     badgeColor: '#ad1457',
     unit: 'Pack of 8 Tampons',
@@ -128,7 +129,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     inStock: true,
   },
 
-  // 🌸 Pads & Pantyliners
+  // Pads & Pantyliners
   {
     id: 'prod-day-pads-ultra',
     category: 'pads',
@@ -136,7 +137,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Breathable cottony-soft feel for work & study',
     description: '240mm length with gel-lock core and side leak guards. Completely rash-free and discreetly wrapped.',
     price: 35,
-    emoji: '🌸',
+    icon: 'shield-outline',
     badge: 'Day Protection',
     badgeColor: '#c2185b',
     unit: 'Pack of 2 Pads',
@@ -150,7 +151,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Wide fan back for 360° stain-free sleep',
     description: '320mm extra-long night pads with deep absorbent channels that lock heavy flow and prevent back staining in any sleeping position.',
     price: 45,
-    emoji: '🌙',
+    icon: 'moon-outline',
     badge: 'Overnight Guard',
     badgeColor: '#4a148c',
     unit: 'Pack of 2 Pads',
@@ -164,7 +165,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Naturally hypoallergenic and antibacterial',
     description: 'Made from sustainably harvested bamboo fiber. 3x more absorbent than regular cotton and naturally anti-odor for sensitive skin.',
     price: 60,
-    emoji: '🎋',
+    icon: 'leaf-outline',
     badge: 'Sensitive Skin',
     badgeColor: '#2e7d32',
     unit: 'Pack of 2 Pads',
@@ -177,14 +178,14 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'For ovulation discharge, spotting & cup backup',
     description: 'Feather-light 155mm breathable liners. Keeps you fresh all day during ovulation discharge or when your flow is ending.',
     price: 75,
-    emoji: '✨',
+    icon: 'flower-outline',
     badge: 'Daily Freshness',
     badgeColor: '#00695c',
     unit: 'Pack of 20 Liners',
     inStock: true,
   },
 
-  // 🌿 Cramp Roll-Ons & Herbal Teas
+  // Cramp Roll-Ons & Herbal Teas
   {
     id: 'prod-cramp-rollon',
     category: 'relief',
@@ -192,7 +193,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Instant cooling botanical relief on skin',
     description: 'Enriched with peppermint oil, eucalyptus, and wintergreen. Absorbs within 30 seconds to numb throbbing pelvic and lower back cramps.',
     price: 129,
-    emoji: '🌿',
+    icon: 'bandage-outline',
     badge: 'Fast Acting',
     badgeColor: '#1b5e20',
     unit: '10ml Roll-On',
@@ -205,14 +206,14 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Warm herbal infusion that soothes spasms',
     description: 'Caffeine-free therapeutic blend of chamomile, dried ginger root, fennel seeds, and spearmint. Relaxes smooth muscles and reduces gas bloating.',
     price: 140,
-    emoji: '🍵',
+    icon: 'cafe-outline',
     badge: 'Caffeine Free',
     badgeColor: '#33691e',
     unit: '15 Pyramid Tea Bags',
     inStock: true,
   },
 
-  // 🧼 Intimate Hygiene & Care
+  // Intimate Hygiene & Care
   {
     id: 'prod-intimate-wash',
     category: 'hygiene',
@@ -220,7 +221,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Maintains healthy vaginal microflora',
     description: 'Infused with tea tree oil, aloe vera, and lactic acid. Free of parabens and harsh sulphates. Prevents bacterial irritation during periods.',
     price: 125,
-    emoji: '🧼',
+    icon: 'sparkles-outline',
     badge: 'pH 3.5 Balanced',
     badgeColor: '#00838f',
     unit: '100ml Bottle',
@@ -233,14 +234,14 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Mess-free freshness when changing pads outside',
     description: '100% viscose biodegradable wipes soaked in chamomile and aloe water. Hypoallergenic, alcohol-free, and safe for intimate skin.',
     price: 60,
-    emoji: '🍃',
+    icon: 'documents-outline',
     badge: 'Flushable & Soft',
     badgeColor: '#004d40',
     unit: 'Pack of 10 Wipes',
     inStock: true,
   },
 
-  // 🎁 All-in-One Care Kits
+  // All-in-One Care Kits
   {
     id: 'prod-emergency-care-kit',
     category: 'kits',
@@ -248,7 +249,7 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
     tagline: 'Pads + Hot Patch + Dark Chocolate + Pouch',
     description: 'The ultimate emergency rescue box! Contains: 2x Day Pads + 1x Night Pad + 1x Self-Heating Patch + 1x Dark Chocolate Bar + 1x Herbal Tea + Discreet Pouch.',
     price: 249,
-    emoji: '🎁',
+    icon: 'briefcase-outline',
     badge: 'Complete Comfort',
     badgeColor: '#6a1b9a',
     unit: 'Full Rescue Box',
@@ -257,15 +258,15 @@ export const DEFAULT_ESSENTIALS: EssentialItem[] = [
 ];
 
 export const CATEGORIES = [
-  { id: 'all', label: '✨ All Things' },
-  { id: 'chocolate', label: '🍫 Dark Chocolate' },
-  { id: 'heat', label: '♨️ Hot Water Bag & Heat' },
-  { id: 'cup', label: '🩸 Menstrual Cups' },
-  { id: 'pads', label: '🌸 Pads & Liners' },
-  { id: 'tampons', label: '🩸 Tampons' },
-  { id: 'relief', label: '🌿 Cramp Roll-Ons & Teas' },
-  { id: 'hygiene', label: '🧼 Intimate Hygiene' },
-  { id: 'kits', label: '🎁 Period Care Kits' },
+  { id: 'all', label: 'All Essentials', icon: 'grid-outline' },
+  { id: 'chocolate', label: 'Dark Chocolate & Cacao', icon: 'nutrition-outline' },
+  { id: 'heat', label: 'Heat Therapy & Warmth', icon: 'flame-outline' },
+  { id: 'cup', label: 'Menstrual Cups', icon: 'water-outline' },
+  { id: 'pads', label: 'Pads & Liners', icon: 'shield-outline' },
+  { id: 'tampons', label: 'Organic Tampons', icon: 'medical-outline' },
+  { id: 'relief', label: 'Cramp Relief', icon: 'bandage-outline' },
+  { id: 'hygiene', label: 'Intimate Care', icon: 'sparkles-outline' },
+  { id: 'kits', label: 'Care Boxes & Kits', icon: 'briefcase-outline' },
 ];
 
 interface PeriodStoreSectionProps {
@@ -351,12 +352,12 @@ export const PeriodStoreSection: React.FC<PeriodStoreSectionProps> = ({
       <View style={styles.heroCard}>
         <View style={styles.heroRow}>
           <View style={styles.heroIconBadge}>
-            <Text style={{ fontSize: 24 }}>🍫</Text>
+            <Ionicons name="sparkles" size={22} color={colors.plum} />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <View style={styles.heroBadgeRow}>
               <View style={styles.heroPill}>
-                <Ionicons name="sparkles" size={11} color={colors.white} style={{ marginRight: 4 }} />
+                <Ionicons name="shield-checkmark" size={11} color={colors.white} style={{ marginRight: 4 }} />
                 <Text style={styles.heroPillText}>ALL PERIOD ESSENTIALS</Text>
               </View>
               <Text style={styles.discreetTag}>Discreet Sealed Bag</Text>
@@ -410,6 +411,12 @@ export const PeriodStoreSection: React.FC<PeriodStoreSectionProps> = ({
               onPress={() => setSelectedCategory(cat.id)}
               activeOpacity={0.8}
             >
+              <Ionicons
+                name={cat.icon as any}
+                size={14}
+                color={isSelected ? colors.white : colors.plum}
+                style={{ marginRight: 6 }}
+              />
               <Text
                 style={[
                   styles.categoryChipText,
@@ -431,7 +438,7 @@ export const PeriodStoreSection: React.FC<PeriodStoreSectionProps> = ({
         </View>
       ) : filteredItems.length === 0 ? (
         <Card style={styles.emptyCard}>
-          <Text style={{ fontSize: 32, textAlign: 'center', marginBottom: 6 }}>🔍</Text>
+          <Ionicons name="search-outline" size={36} color={colors.rose} style={{ marginBottom: 8 }} />
           <Text style={styles.emptyTitle}>No matching products</Text>
           <Text style={styles.emptySubtitle}>Try searching for "chocolate", "cup", or "hot water bag"</Text>
           <TouchableOpacity
@@ -454,8 +461,8 @@ export const PeriodStoreSection: React.FC<PeriodStoreSectionProps> = ({
             <Card key={item.id} style={styles.productCard}>
               {/* Product Top Header */}
               <View style={styles.productHeader}>
-                <View style={styles.productEmojiBox}>
-                  <Text style={styles.productEmoji}>{item.emoji}</Text>
+                <View style={[styles.productIconBox, { backgroundColor: `${item.badgeColor || colors.plum}14` }]}>
+                  <Ionicons name={(item.icon || 'shield-outline') as any} size={24} color={item.badgeColor || colors.plum} />
                 </View>
 
                 <View style={{ flex: 1, marginLeft: 12 }}>
@@ -658,13 +665,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.white,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.line,
-    marginRight: 6,
+    borderColor: 'rgba(243, 213, 228, 0.7)',
+    marginRight: 8,
   },
   categoryChipActive: {
     backgroundColor: colors.plum,
@@ -725,33 +734,29 @@ const styles = StyleSheet.create({
   // Product Card
   productCard: {
     backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 18,
+    padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: colors.line,
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: 'rgba(243, 213, 228, 0.7)',
+    shadowColor: '#6b3d62',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
   },
   productHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
-  productEmojiBox: {
+  productIconBox: {
     width: 48,
     height: 48,
-    borderRadius: 12,
-    backgroundColor: '#fbf4f8',
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#f2e1ed',
-  },
-  productEmoji: {
-    fontSize: 26,
+    borderColor: 'rgba(243, 213, 228, 0.6)',
   },
   badgeRow: {
     flexDirection: 'row',

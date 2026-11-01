@@ -43,7 +43,12 @@ function AppContent() {
 
   const checkInitialAuth = useCallback(async () => {
     try {
-      const status = await PadzyraApi.getAuthStatus();
+      // Fast check (1.2s timeout) so app doesn't hang on loading spinner
+      const statusPromise = PadzyraApi.getAuthStatus();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Auth check timeout')), 1200)
+      );
+      const status: any = await Promise.race([statusPromise, timeoutPromise]);
       if (status && status.authenticated) {
         setUserRole(status.role || 'girl');
         setCurrentTab(status.role === 'shop' ? 'shop' : 'home');
@@ -110,6 +115,17 @@ function AppContent() {
     setCurrentTab('home');
   };
 
+  // Forgot PIN: Log out session so user can re-verify identity via OTP
+  const handleForgotPin = async () => {
+    try {
+      await PadzyraApi.logout();
+    } catch {
+      // ignore
+    }
+    setFlowState('login');
+    setCurrentTab('home');
+  };
+
   if (flowState === 'loading') {
     return (
       <View style={[styles.center, { backgroundColor: colors.blush }]}>
@@ -140,6 +156,7 @@ function AppContent() {
         <PinLockScreen
           isSettingPin={isSettingPin}
           onUnlocked={handlePinUnlocked}
+          onForgotPin={handleForgotPin}
         />
       )}
 
@@ -201,6 +218,7 @@ function AppContent() {
                         setIsSettingPin(true);
                         setFlowState('pinLock');
                       }}
+                      onNavigateToActivity={() => setCurrentTab('activity')}
                     />
                   )}
                 </>

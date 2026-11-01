@@ -9,11 +9,11 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Platform,
 } from 'react-native';
 import { colors } from '../theme/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Card } from '../components/Card';
-import { PrimaryButton } from '../components/PrimaryButton';
 import { PadzyraApi } from '../api/client';
 import { AiCoachModal } from '../components/AiCoachModal';
 import { SubscriptionModal } from '../components/SubscriptionModal';
@@ -25,22 +25,22 @@ interface HomeScreenProps {
 }
 
 const FOCUS_TEXTS: Record<string, string> = {
-  lunch: 'Change at lunch.',
-  night: 'Keep a night pad by the bed.',
-  leave: 'Is the pouch in the bag?',
-  heat: 'Hot water bottle.',
-  laundry: 'Wash clothes and sheets.',
-  heavy: 'Put an extra in the bag.',
-  change: 'Time to change.',
-  period: 'Today needs a check.',
-  eve: 'Pack the pouch tonight.',
-  pack: 'Pack the bag checklist.',
-  pms: 'Take it easy tomorrow.',
-  late: 'This month is late. A doctor can help if you want.',
-  move: 'Move pads into the bag tonight.',
-  low: 'Bag is low.',
-  trip: 'Pack extra pads for the trip.',
-  follow: 'Bag is still low.',
+  lunch: 'Change at lunch time for fresh comfort.',
+  night: 'Keep a night pad ready by the bedside.',
+  leave: 'Double check: is your emergency pouch packed?',
+  heat: 'Warm heat pack helps soothe pelvic tension.',
+  laundry: 'Light warm wash for clothing & sheets.',
+  heavy: 'Heavier flow expected. Keep an extra pad handy.',
+  change: 'It has been 4 hours — time for a fresh pad.',
+  period: 'Period may begin today. Stay prepared.',
+  eve: 'Restock your bag pouch before bed.',
+  pack: 'Review your essentials checklist before heading out.',
+  pms: 'Premenstrual phase — prioritize hydration and rest.',
+  late: 'Cycle is delayed. Normal fluctuations happen, consult a doctor if prolonged.',
+  move: 'Transfer fresh pads from home to your bag tonight.',
+  low: 'Bag pad count is low. Restock recommended.',
+  trip: 'Packing extra pads for your travel plans.',
+  follow: 'Bag supply still low. Refill today.',
 };
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -178,18 +178,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const readyOrders = orders.filter((o) => o.status === 'ready' || o.status === 'accepted');
 
+  const getFormattedDate = () => {
+    const now = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+    };
+    return now.toLocaleDateString('en-US', options);
+  };
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.pink} />
+        <ActivityIndicator size="large" color={colors.plum} />
       </View>
     );
   }
+
+  const isPeriodActive = Boolean(dashboard.day);
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -197,213 +210,308 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             setRefreshing(true);
             loadData();
           }}
-          tintColor={colors.pink}
+          tintColor={colors.plum}
         />
       }
     >
-      {/* Top Brand Bar */}
-      <View style={styles.topBar}>
-        <Text style={styles.brandSubtitle}>PADZYRA</Text>
-        <Text style={styles.brandTitle}>Home</Text>
-      </View>
-
-      {error ? (
-        <Card style={styles.errorCard}>
-          <Text style={styles.errorText}>{error}</Text>
-        </Card>
-      ) : null}
-
-      {/* Hero Section */}
-      <View style={styles.heroSection}>
-        {dashboard.day ? (
-          <>
-            <Text style={styles.kicker}>THIS TIME</Text>
-            <Text style={styles.bigNumber}>
-              Day {dashboard.day}{' '}
-              <Text style={styles.subNumber}>of {dashboard.of || 5}</Text>
-            </Text>
-            {dashboard.until ? (
-              <Text style={styles.mutedText}>Until {dashboard.until}</Text>
-            ) : null}
-          </>
-        ) : dashboard.inDays != null ? (
-          <>
-            <Text style={styles.kicker}>ESTIMATE</Text>
-            <Text style={styles.bigNumber}>
-              {dashboard.inDays < 0 ? 'Late' : dashboard.inDays === 0 ? 'Today' : dashboard.inDays}
-              {dashboard.inDays > 0 ? <Text style={styles.subNumber}> days</Text> : null}
-            </Text>
-            <Text style={styles.mutedText}>
-              {dashboard.inDays < 0
-                ? 'A doctor can help if you want. Not a diagnosis.'
-                : 'Estimate only.'}
-            </Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.kicker}>TODAY</Text>
-            <Text style={styles.bigNumber}>Hello</Text>
-          </>
-        )}
-      </View>
-
-      {/* Focus banner */}
-      {dashboard.focus && FOCUS_TEXTS[dashboard.focus] ? (
-        <View style={styles.focusBanner}>
-          <Text style={styles.focusText}>{FOCUS_TEXTS[dashboard.focus]}</Text>
+      {/* Top Header Row */}
+      <View style={styles.topHeader}>
+        <View>
+          <Text style={styles.dateLabel}>{getFormattedDate()}</Text>
+          <Text style={styles.greetingTitle}>Today's Care</Text>
         </View>
-      ) : null}
 
-      {/* Actions */}
-      <View style={styles.actionRow}>
-        {dashboard.day ? (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnOutline]}
-            onPress={handleEndCycle}
-          >
-            <Ionicons name="flag-outline" size={16} color={colors.plum} style={{ marginRight: 6 }} />
-            <Text style={styles.actionBtnOutlineText}>Ended</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnSolid]}
-            onPress={handleStartCycle}
-          >
-            <Ionicons name="water-outline" size={16} color={colors.white} style={{ marginRight: 6 }} />
-            <Text style={styles.actionBtnSolidText}>Started</Text>
-          </TouchableOpacity>
-        )}
-
+        {/* Quick Emergency / SOS Shortcut */}
         <TouchableOpacity
-          style={[styles.actionBtn, styles.actionBtnSolid]}
-          onPress={handleUsePad}
+          activeOpacity={0.8}
+          style={styles.headerSosButton}
+          onPress={onNavigateToEmergency || onNavigateToNow}
         >
-          <Ionicons name="checkmark-outline" size={16} color={colors.white} style={{ marginRight: 6 }} />
-          <Text style={styles.actionBtnSolidText}>Used 1</Text>
+          <Ionicons name="medical" size={15} color="#e11d48" />
+          <Text style={styles.headerSosText}>Emergency</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Emergency Period Mode: I Need Help Now */}
-      <TouchableOpacity
-        style={styles.emergencySosButton}
-        activeOpacity={0.88}
-        onPress={onNavigateToEmergency || onNavigateToNow}
-      >
-        <View style={styles.emergencySosIconCircle}>
-          <Ionicons name="alert-circle" size={20} color={colors.white} />
+      {error ? (
+        <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle-outline" size={16} color={colors.warn} style={{ marginRight: 6 }} />
+          <Text style={styles.errorText}>{error}</Text>
         </View>
-        <View style={{ flex: 1, marginLeft: 10 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.emergencySosTitle}>I Need Help Now</Text>
-            <View style={styles.emergencySosBadge}>
-              <Text style={styles.emergencySosBadgeText}>EMERGENCY</Text>
+      ) : null}
+
+      {/* Hero Cycle Dial Ring */}
+      <View style={styles.cycleCard}>
+        <View style={styles.cycleRingOuter}>
+          <View style={[styles.cycleRingInner, isPeriodActive && styles.cycleRingInnerActive]}>
+            <View style={styles.cycleRingCenter}>
+              {/* Status Badge */}
+              <View style={[styles.phaseBadge, isPeriodActive && styles.phaseBadgeActive]}>
+                <Ionicons
+                  name={isPeriodActive ? 'water' : 'calendar-outline'}
+                  size={12}
+                  color={isPeriodActive ? '#e11d48' : colors.plum}
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={[styles.phaseBadgeText, isPeriodActive && styles.phaseBadgeTextActive]}>
+                  {isPeriodActive ? 'MENSTRUAL FLOW' : 'CYCLE FORECAST'}
+                </Text>
+              </View>
+
+              {/* Day / Time Counter */}
+              {dashboard.day ? (
+                <>
+                  <Text style={styles.cycleBigNumber}>
+                    Day {dashboard.day}
+                  </Text>
+                  <Text style={styles.cycleSubNumber}>
+                    of {dashboard.of || 5} days
+                  </Text>
+                  {dashboard.until ? (
+                    <Text style={styles.cycleMutedNote}>Expected until {dashboard.until}</Text>
+                  ) : null}
+                </>
+              ) : dashboard.inDays != null ? (
+                <>
+                  <Text style={styles.cycleBigNumber}>
+                    {dashboard.inDays < 0
+                      ? 'Late'
+                      : dashboard.inDays === 0
+                      ? 'Today'
+                      : `${dashboard.inDays} Days`}
+                  </Text>
+                  <Text style={styles.cycleSubNumber}>
+                    {dashboard.inDays <= 0 ? 'Expected period' : 'Until next period'}
+                  </Text>
+                  <Text style={styles.cycleMutedNote}>
+                    {dashboard.inDays < 0 ? 'Cycle delayed · Normal variations' : 'Predicted based on cycle logs'}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.cycleBigNumber}>Welcome</Text>
+                  <Text style={styles.cycleSubNumber}>Ready to track cycle</Text>
+                </>
+              )}
             </View>
           </View>
-          <Text style={styles.emergencySosSub}>
-            Unexpected period · Leaks · Nearby toilets · Fast delivery
-          </Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#b91c1c" />
-      </TouchableOpacity>
 
-      <PrimaryButton
-        title="Need one now"
-        icon={<Ionicons name="flash" size={18} color={colors.white} />}
-        onPress={onNavigateToNow}
-        style={styles.needOneNowBtn}
-      />
+        {/* Daily Focus Reminder */}
+        {dashboard.focus && FOCUS_TEXTS[dashboard.focus] ? (
+          <View style={styles.focusTipBox}>
+            <Ionicons name="information-circle-outline" size={16} color={colors.plum} style={{ marginRight: 6 }} />
+            <Text style={styles.focusTipText}>{FOCUS_TEXTS[dashboard.focus]}</Text>
+          </View>
+        ) : null}
 
-      {/* 24/7 AI Gynec & Period Coach Banner */}
+        {/* Action Buttons Below Dial */}
+        <View style={styles.cycleActionRow}>
+          {isPeriodActive ? (
+            <TouchableOpacity
+              style={[styles.primaryActionBtn, styles.actionBtnEnd]}
+              activeOpacity={0.8}
+              onPress={handleEndCycle}
+            >
+              <Ionicons name="checkmark-circle-outline" size={17} color={colors.white} style={{ marginRight: 6 }} />
+              <Text style={styles.primaryActionText}>Period Ended</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.primaryActionBtn, styles.actionBtnStart]}
+              activeOpacity={0.8}
+              onPress={handleStartCycle}
+            >
+              <Ionicons name="water" size={17} color={colors.white} style={{ marginRight: 6 }} />
+              <Text style={styles.primaryActionText}>Period Started Today</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.secondaryActionBtn}
+            activeOpacity={0.8}
+            onPress={handleUsePad}
+          >
+            <Ionicons name="add" size={16} color={colors.plum} style={{ marginRight: 4 }} />
+            <Text style={styles.secondaryActionText}>Log Pad Used</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Clinical Guidance / Medical Advisor Card (NO ChatGPT generic sparkles) */}
       <TouchableOpacity
-        style={styles.aiCoachWidget}
-        activeOpacity={0.88}
+        style={styles.medicalAdvisorCard}
+        activeOpacity={0.85}
         onPress={() => setShowAiCoach(true)}
       >
-        <View style={styles.aiCoachIconCircle}>
-          <Ionicons name="sparkles" size={16} color={colors.white} />
+        <View style={styles.advisorIconCircle}>
+          <Ionicons name="medkit-outline" size={20} color={colors.plum} />
         </View>
-        <View style={{ flex: 1, marginLeft: 10 }}>
+
+        <View style={{ flex: 1, marginHorizontal: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.aiCoachTitle}>Ask AI Period Coach</Text>
-            <View style={styles.aiCoachPill}>
-              <Text style={styles.aiCoachPillText}>24/7</Text>
+            <Text style={styles.advisorTitle}>Clinical Care & Advisor</Text>
+            <View style={styles.advisorBadge}>
+              <Text style={styles.advisorBadgeText}>24/7 SUPPORT</Text>
             </View>
           </View>
-          <Text style={styles.aiCoachSub}>Ask questions about delay, cramps & remedies</Text>
+          <Text style={styles.advisorSubtitle}>
+            Evidence-based advice on cramps, cycle delay & reproductive health
+          </Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.plum} />
+
+        <Ionicons name="chevron-forward" size={18} color={colors.rose} />
       </TouchableOpacity>
 
-      {/* Pads Stock Card */}
-      <Card>
+      {/* How Today Feels (Symptom & Mood Tracker with intuitive health icons) */}
+      <Card style={styles.feelingsCard}>
         <View style={styles.cardHeaderRow}>
+          <Ionicons name="heart-half-outline" size={16} color={colors.plum} style={{ marginRight: 8 }} />
+          <Text style={styles.cardSectionHeader}>DAILY SYMPTOMS & WELLNESS</Text>
+        </View>
+
+        {/* Cramps Level */}
+        <Text style={styles.feelingCategoryTitle}>Pelvic Cramps</Text>
+        <View style={styles.chipsRow}>
+          {[
+            { key: 'none', label: 'None', icon: 'happy-outline' },
+            { key: 'mild', label: 'Mild', icon: 'leaf-outline' },
+            { key: 'strong', label: 'Severe', icon: 'pulse-outline' },
+          ].map((item) => {
+            const active = feelings.cramps === item.key;
+            return (
+              <TouchableOpacity
+                key={item.key}
+                activeOpacity={0.75}
+                style={[styles.feelingChip, active && styles.feelingChipActive]}
+                onPress={() => handleFeelChange('cramps', item.key)}
+              >
+                <Ionicons
+                  name={item.icon as any}
+                  size={14}
+                  color={active ? colors.white : colors.rose}
+                  style={{ marginRight: 5 }}
+                />
+                <Text style={[styles.feelingChipText, active && styles.feelingChipTextActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Mood Level */}
+        <Text style={[styles.feelingCategoryTitle, { marginTop: 14 }]}>Mood & Energy</Text>
+        <View style={styles.chipsRow}>
+          {[
+            { key: 'calm', label: 'Calm', icon: 'flower-outline' },
+            { key: 'okay', label: 'Normal', icon: 'sunny-outline' },
+            { key: 'low', label: 'Tired', icon: 'cloud-outline' },
+            { key: 'irritable', label: 'Restless', icon: 'flash-outline' },
+          ].map((item) => {
+            const active = feelings.mood === item.key;
+            return (
+              <TouchableOpacity
+                key={item.key}
+                activeOpacity={0.75}
+                style={[styles.feelingChip, active && styles.feelingChipActive]}
+                onPress={() => handleFeelChange('mood', item.key)}
+              >
+                <Ionicons
+                  name={item.icon as any}
+                  size={14}
+                  color={active ? colors.white : colors.rose}
+                  style={{ marginRight: 5 }}
+                />
+                <Text style={[styles.feelingChipText, active && styles.feelingChipTextActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </Card>
+
+      {/* Pad Inventory & Supply Balance */}
+      <Card style={styles.supplyCard}>
+        <View style={styles.cardHeaderRowBetween}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="cube-outline" size={15} color={colors.rose} style={{ marginRight: 6 }} />
-            <Text style={styles.cardHeader}>PADS</Text>
+            <Ionicons name="bag-handle-outline" size={16} color={colors.plum} style={{ marginRight: 8 }} />
+            <Text style={styles.cardSectionHeader}>PAD INVENTORY</Text>
           </View>
           <TouchableOpacity
-            style={styles.adjustStockBtn}
+            activeOpacity={0.7}
+            style={styles.adjustStockButton}
             onPress={() => setShowStockForm(!showStockForm)}
           >
             <Ionicons
               name={showStockForm ? 'close' : 'create-outline'}
-              size={14}
+              size={13}
               color={colors.plum}
               style={{ marginRight: 4 }}
             />
-            <Text style={styles.adjustStockBtnText}>
-              {showStockForm ? 'Close' : 'Adjust'}
+            <Text style={styles.adjustStockButtonText}>
+              {showStockForm ? 'Cancel' : 'Update Count'}
             </Text>
           </TouchableOpacity>
         </View>
-        {dashboard.move ? (
-          <Text style={styles.mutedText}>
-            Move {dashboard.move} into the bag tonight.
-          </Text>
-        ) : null}
 
-        <View style={styles.tilesGrid}>
-          <View style={[styles.tile, bagDay < 2 && styles.tileLow]}>
-            <View style={styles.tileLabelRow}>
-              <Ionicons name="bag-handle-outline" size={13} color={bagDay < 2 ? colors.warn : colors.rose} style={{ marginRight: 4 }} />
-              <Text style={styles.tileLabel}>Bag · day</Text>
+        <View style={styles.inventoryGrid}>
+          {/* Bag Day */}
+          <View style={[styles.inventoryTile, bagDay < 2 && styles.inventoryTileWarning]}>
+            <View style={styles.inventoryTileHeader}>
+              <Ionicons name="sunny-outline" size={15} color={bagDay < 2 ? colors.warn : colors.rose} />
+              <Text style={styles.inventoryTileLabel}>Bag · Day</Text>
             </View>
-            <Text style={[styles.tileCount, bagDay < 2 && styles.tileCountLow]}>
+            <Text style={[styles.inventoryTileValue, bagDay < 2 && styles.inventoryTileValueWarning]}>
               {bagDay}
             </Text>
-          </View>
-          <View style={[styles.tile, bagNight < 2 && styles.tileLow]}>
-            <View style={styles.tileLabelRow}>
-              <Ionicons name="moon-outline" size={13} color={bagNight < 2 ? colors.warn : colors.rose} style={{ marginRight: 4 }} />
-              <Text style={styles.tileLabel}>Bag · night</Text>
-            </View>
-            <Text style={[styles.tileCount, bagNight < 2 && styles.tileCountLow]}>
-              {bagNight}
+            <Text style={styles.inventoryTileSub}>
+              {bagDay < 2 ? 'Low stock' : 'Pouch ready'}
             </Text>
           </View>
-          <View style={styles.tile}>
-            <View style={styles.tileLabelRow}>
-              <Ionicons name="home-outline" size={13} color={colors.rose} style={{ marginRight: 4 }} />
-              <Text style={styles.tileLabel}>Home · day</Text>
+
+          {/* Bag Night */}
+          <View style={[styles.inventoryTile, bagNight < 2 && styles.inventoryTileWarning]}>
+            <View style={styles.inventoryTileHeader}>
+              <Ionicons name="moon-outline" size={15} color={bagNight < 2 ? colors.warn : colors.rose} />
+              <Text style={styles.inventoryTileLabel}>Bag · Night</Text>
             </View>
-            <Text style={styles.tileCount}>{homeDay}</Text>
+            <Text style={[styles.inventoryTileValue, bagNight < 2 && styles.inventoryTileValueWarning]}>
+              {bagNight}
+            </Text>
+            <Text style={styles.inventoryTileSub}>
+              {bagNight < 2 ? 'Low stock' : 'Pouch ready'}
+            </Text>
           </View>
-          <View style={styles.tile}>
-            <View style={styles.tileLabelRow}>
-              <Ionicons name="bed-outline" size={13} color={colors.rose} style={{ marginRight: 4 }} />
-              <Text style={styles.tileLabel}>Home · night</Text>
+
+          {/* Home Day */}
+          <View style={styles.inventoryTile}>
+            <View style={styles.inventoryTileHeader}>
+              <Ionicons name="home-outline" size={15} color={colors.rose} />
+              <Text style={styles.inventoryTileLabel}>Home · Day</Text>
             </View>
-            <Text style={styles.tileCount}>{homeNight}</Text>
+            <Text style={styles.inventoryTileValue}>{homeDay}</Text>
+            <Text style={styles.inventoryTileSub}>In drawer</Text>
+          </View>
+
+          {/* Home Night */}
+          <View style={styles.inventoryTile}>
+            <View style={styles.inventoryTileHeader}>
+              <Ionicons name="bed-outline" size={15} color={colors.rose} />
+              <Text style={styles.inventoryTileLabel}>Home · Night</Text>
+            </View>
+            <Text style={styles.inventoryTileValue}>{homeNight}</Text>
+            <Text style={styles.inventoryTileSub}>Bedside ready</Text>
           </View>
         </View>
 
         {showStockForm && (
-          <View style={styles.stockFormBox}>
-            <Text style={styles.stockFormTitle}>Update Supplies</Text>
+          <View style={styles.stockUpdateForm}>
+            <Text style={styles.stockUpdateHeader}>Update Pad Quantity</Text>
 
-            <View style={styles.stockRow}>
-              <Text style={styles.stockLabel}>Location:</Text>
-              <View style={styles.stockOptionsRow}>
+            <View style={styles.stockFormRow}>
+              <Text style={styles.stockFieldLabel}>Place:</Text>
+              <View style={styles.stockChipsRow}>
                 {(['bag', 'home'] as const).map((loc) => (
                   <TouchableOpacity
                     key={loc}
@@ -418,9 +526,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </View>
             </View>
 
-            <View style={styles.stockRow}>
-              <Text style={styles.stockLabel}>Type:</Text>
-              <View style={styles.stockOptionsRow}>
+            <View style={styles.stockFormRow}>
+              <Text style={styles.stockFieldLabel}>Type:</Text>
+              <View style={styles.stockChipsRow}>
                 {(['day', 'night'] as const).map((kind) => (
                   <TouchableOpacity
                     key={kind}
@@ -435,10 +543,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </View>
             </View>
 
-            <View style={styles.stockRow}>
-              <Text style={styles.stockLabel}>Exact Count:</Text>
+            <View style={styles.stockFormRow}>
+              <Text style={styles.stockFieldLabel}>Count:</Text>
               <TextInput
-                style={styles.stockQtyInput}
+                style={styles.stockNumberInput}
                 keyboardType="numeric"
                 value={stockQty}
                 onChangeText={setStockQty}
@@ -448,7 +556,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </View>
 
             <TouchableOpacity
-              style={styles.saveStockBtn}
+              style={styles.saveStockSubmitButton}
               onPress={handleSaveStock}
               disabled={savingStock}
             >
@@ -457,7 +565,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               ) : (
                 <>
                   <Ionicons name="checkmark-circle-outline" size={16} color={colors.white} style={{ marginRight: 6 }} />
-                  <Text style={styles.saveStockBtnText}>Save Stock</Text>
+                  <Text style={styles.saveStockSubmitText}>Save Supply</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -465,99 +573,56 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         )}
       </Card>
 
-      {/* Daily Feelings Card */}
-      <Card>
-        <View style={styles.cardHeaderRow}>
-          <Ionicons name="heart-outline" size={15} color={colors.rose} style={{ marginRight: 6 }} />
-          <Text style={styles.cardHeader}>HOW TODAY FEELS</Text>
-        </View>
-
-        <Text style={styles.chipCategory}>Cramps</Text>
-        <View style={styles.chipsRow}>
-          {['none', 'mild', 'strong'].map((val) => {
-            const active = feelings.cramps === val;
-            return (
-              <TouchableOpacity
-                key={val}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => handleFeelChange('cramps', val)}
-              >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {val.charAt(0).toUpperCase() + val.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <Text style={[styles.chipCategory, { marginTop: 14 }]}>Mood</Text>
-        <View style={styles.chipsRow}>
-          {['calm', 'okay', 'low', 'irritable'].map((val) => {
-            const active = feelings.mood === val;
-            return (
-              <TouchableOpacity
-                key={val}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => handleFeelChange('mood', val)}
-              >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {val.charAt(0).toUpperCase() + val.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </Card>
-
-      {/* Ready Orders */}
+      {/* Ready Orders to Pickup */}
       {readyOrders.length > 0 ? (
-        <Card>
+        <Card style={styles.orderCard}>
           <View style={styles.cardHeaderRow}>
-            <Ionicons name="bag-check-outline" size={15} color={colors.rose} style={{ marginRight: 6 }} />
-            <Text style={styles.cardHeader}>READY TO PICK UP</Text>
+            <Ionicons name="receipt-outline" size={16} color={colors.plum} style={{ marginRight: 8 }} />
+            <Text style={styles.cardSectionHeader}>READY FOR PICKUP</Text>
           </View>
           {readyOrders.map((ord) => (
             <View key={ord.id} style={styles.orderItem}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.orderShop}>
-                  {ord.shop || 'Shop'} · {ord.orderNumber}
+                <Text style={styles.orderShopName}>
+                  {ord.shop || 'Partner Pharmacy'} · Order #{ord.orderNumber}
                 </Text>
-                <Text style={styles.mutedText}>
-                  {ord.kind} × {ord.qty} ·{' '}
-                  <Text style={{ color: colors.success, fontWeight: '800' }}>
-                    {ord.status}
+                <Text style={styles.orderDetails}>
+                  {ord.kind} × {ord.qty} units ·{' '}
+                  <Text style={{ color: colors.success, fontWeight: '700' }}>
+                    {ord.status?.toUpperCase()}
                   </Text>
                 </Text>
               </View>
               <TouchableOpacity
-                style={styles.pickupBtn}
+                style={styles.confirmPickupButton}
+                activeOpacity={0.8}
                 onPress={() => handlePickedUp(ord.id)}
               >
-                <Text style={styles.pickupBtnText}>Picked up</Text>
+                <Text style={styles.confirmPickupText}>Picked Up</Text>
               </TouchableOpacity>
             </View>
           ))}
         </Card>
       ) : null}
 
-      {/* Checklist */}
+      {/* Pack Essentials Checklist */}
       {checklist.length > 0 ? (
-        <Card>
+        <Card style={styles.checklistCard}>
           <View style={styles.cardHeaderRow}>
-            <Ionicons name="list-outline" size={15} color={colors.rose} style={{ marginRight: 6 }} />
-            <Text style={styles.cardHeader}>PACK</Text>
+            <Ionicons name="checkbox-outline" size={16} color={colors.plum} style={{ marginRight: 8 }} />
+            <Text style={styles.cardSectionHeader}>DAILY PACKING CHECKLIST</Text>
           </View>
           {checklist.map((item, idx) => (
-            <View key={idx} style={styles.checklistItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color={colors.pink} style={styles.checklistDot} />
-              <Text style={styles.checklistText}>{item}</Text>
+            <View key={idx} style={styles.checklistItemRow}>
+              <Ionicons name="checkmark-circle" size={16} color={colors.pinkDark} style={{ marginRight: 8 }} />
+              <Text style={styles.checklistTitle}>{item}</Text>
             </View>
           ))}
         </Card>
       ) : null}
 
-      {/* Bottom spacer for floating navigation */}
-      <View style={{ height: 90 }} />
+      {/* Spacer for bottom navigation dock */}
+      <View style={{ height: 96 }} />
 
       <AiCoachModal
         visible={showAiCoach}
@@ -580,11 +645,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.blush,
+    backgroundColor: '#fff9fb',
   },
   content: {
     padding: 16,
-    paddingTop: 20,
+    paddingTop: 14,
     maxWidth: 440,
     alignSelf: 'center',
     width: '100%',
@@ -593,203 +658,292 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.blush,
+    backgroundColor: '#fff9fb',
   },
-  topBar: {
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
-  brandSubtitle: {
+  dateLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.rose,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  greetingTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: colors.plum,
+    letterSpacing: -0.4,
+    marginTop: 2,
+  },
+  headerSosButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffe4e6',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  headerSosText: {
+    color: '#e11d48',
     fontSize: 12,
     fontWeight: '800',
-    color: colors.rose,
-    letterSpacing: 1.5,
+    marginLeft: 4,
   },
-  brandTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.plum,
-    letterSpacing: -0.5,
-  },
-  errorCard: {
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.warnBg,
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 12,
   },
   errorText: {
     color: colors.warn,
+    fontSize: 13,
     fontWeight: '700',
+    flex: 1,
   },
-  heroSection: {
+
+  // Cycle Dial Card
+  cycleCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
     alignItems: 'center',
-    paddingVertical: 12,
-    marginBottom: 14,
+    marginBottom: 16,
+    shadowColor: '#6b3d62',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(243, 213, 228, 0.6)',
   },
-  kicker: {
-    fontSize: 12,
+  cycleRingOuter: {
+    width: 210,
+    height: 210,
+    borderRadius: 105,
+    backgroundColor: 'rgba(255, 245, 248, 0.8)',
+    borderWidth: 2,
+    borderColor: 'rgba(244, 167, 197, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 6,
+  },
+  cycleRingInner: {
+    width: 184,
+    height: 184,
+    borderRadius: 92,
+    backgroundColor: '#ffffff',
+    borderWidth: 3,
+    borderColor: '#f9dce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#f4a7c5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  cycleRingInnerActive: {
+    borderColor: '#f43f5e',
+    backgroundColor: '#fffdfd',
+  },
+  cycleRingCenter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  phaseBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f6ecf3',
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    marginBottom: 6,
+  },
+  phaseBadgeActive: {
+    backgroundColor: '#ffe4e6',
+  },
+  phaseBadgeText: {
+    fontSize: 9.5,
     fontWeight: '800',
-    color: colors.rose,
-    letterSpacing: 1,
-    marginBottom: 4,
+    color: colors.plum,
+    letterSpacing: 0.6,
   },
-  bigNumber: {
-    fontSize: 48,
+  phaseBadgeTextActive: {
+    color: '#e11d48',
+  },
+  cycleBigNumber: {
+    fontSize: 32,
     fontWeight: '900',
     color: colors.plum,
-    letterSpacing: -1,
+    letterSpacing: -0.6,
+    textAlign: 'center',
   },
-  subNumber: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.rose,
-  },
-  mutedText: {
-    fontSize: 14,
-    color: colors.rose,
-    marginTop: 4,
-  },
-  focusBanner: {
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderColor: '#eec3d6',
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  focusText: {
-    color: colors.plum,
+  cycleSubNumber: {
+    fontSize: 13,
     fontWeight: '700',
-    fontSize: 14,
+    color: colors.rose,
+    marginTop: 2,
+    textAlign: 'center',
   },
-  actionRow: {
+  cycleMutedNote: {
+    fontSize: 11,
+    color: '#a8819d',
+    marginTop: 4,
+    textAlign: 'center',
+    paddingHorizontal: 10,
+  },
+
+  // Focus Tip Box
+  focusTipBox: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
+    alignItems: 'center',
+    backgroundColor: '#fbf4f8',
+    borderRadius: 14,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    marginTop: 14,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#f1d6e4',
   },
-  actionBtn: {
+  focusTipText: {
+    color: colors.plum,
+    fontSize: 13,
+    fontWeight: '600',
     flex: 1,
-    height: 48,
+  },
+
+  // Cycle Action Row
+  cycleActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+    width: '100%',
+  },
+  primaryActionBtn: {
+    flex: 1.2,
+    height: 44,
     borderRadius: 14,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  actionBtnSolid: {
+  actionBtnStart: {
     backgroundColor: '#dc97c4',
   },
-  actionBtnSolidText: {
+  actionBtnEnd: {
+    backgroundColor: colors.plum,
+  },
+  primaryActionText: {
     color: colors.white,
+    fontSize: 13,
     fontWeight: '800',
-    fontSize: 15,
   },
-  actionBtnOutline: {
-    backgroundColor: colors.white,
+  secondaryActionBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#ffffff',
     borderWidth: 1.5,
-    borderColor: colors.line,
-  },
-  actionBtnOutlineText: {
-    color: colors.plum,
-    fontWeight: '800',
-    fontSize: 15,
-  },
-  needOneNowBtn: {
-    marginBottom: 12,
-  },
-  aiCoachWidget: {
+    borderColor: '#e8c9dc',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff4fa',
-    borderWidth: 1.5,
-    borderColor: '#f2cade',
-    borderRadius: 18,
+    justifyContent: 'center',
+  },
+  secondaryActionText: {
+    color: colors.plum,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  // Medical Advisor Card (NO ChatGPT generic sparkles)
+  medicalAdvisorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
     padding: 14,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(215, 176, 230, 0.45)',
     shadowColor: colors.plum,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  aiCoachIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#dc97c4',
+  advisorIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f7edf9',
+    borderWidth: 1,
+    borderColor: '#e5c4ec',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  aiCoachTitle: {
+  advisorTitle: {
     fontSize: 14,
     fontWeight: '800',
     color: colors.plum,
   },
-  aiCoachPill: {
-    backgroundColor: '#f3d5e7',
-    paddingHorizontal: 5,
+  advisorBadge: {
+    backgroundColor: '#efe2f2',
+    paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 6,
     marginLeft: 6,
   },
-  aiCoachPillText: {
+  advisorBadgeText: {
     fontSize: 9,
     fontWeight: '900',
     color: colors.plum,
   },
-  aiCoachSub: {
-    fontSize: 11,
+  advisorSubtitle: {
+    fontSize: 11.5,
     color: colors.rose,
     marginTop: 2,
+    lineHeight: 16,
+  },
+
+  // Feelings Card
+  feelingsCard: {
+    marginBottom: 16,
+    padding: 18,
+    borderRadius: 20,
   },
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  cardHeader: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.rose,
-    letterSpacing: 1,
-  },
-  tilesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 12,
-  },
-  tile: {
-    width: '48%',
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.line,
-    borderRadius: 16,
-    padding: 14,
-  },
-  tileLow: {
-    borderColor: colors.warn,
-    backgroundColor: colors.warnBg,
-  },
-  tileLabelRow: {
+  cardHeaderRowBetween: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  tileLabel: {
-    fontSize: 13,
-    color: colors.rose,
-    fontWeight: '700',
-  },
-  tileCount: {
-    fontSize: 28,
-    fontWeight: '900',
+  cardSectionHeader: {
+    fontSize: 12,
+    fontWeight: '800',
     color: colors.plum,
-    marginTop: 4,
+    letterSpacing: 0.6,
   },
-  tileCountLow: {
-    color: colors.warn,
-  },
-  chipCategory: {
-    fontSize: 13,
-    color: colors.rose,
+  feelingCategoryTitle: {
+    fontSize: 12.5,
     fontWeight: '700',
+    color: colors.rose,
     marginBottom: 8,
   },
   chipsRow: {
@@ -797,102 +951,116 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
-  chip: {
-    backgroundColor: colors.white,
+  feelingChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
     borderWidth: 1.5,
     borderColor: colors.line,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 7,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
-  chipActive: {
+  feelingChipActive: {
     backgroundColor: colors.plum,
     borderColor: colors.plum,
   },
-  chipText: {
-    fontSize: 13,
+  feelingChipText: {
+    fontSize: 12.5,
     fontWeight: '700',
     color: colors.ink,
   },
-  chipTextActive: {
+  feelingChipTextActive: {
     color: colors.white,
   },
-  orderItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
+
+  // Supply Inventory
+  supplyCard: {
+    marginBottom: 16,
+    padding: 18,
+    borderRadius: 20,
   },
-  orderShop: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.ink,
-  },
-  pickupBtn: {
-    backgroundColor: colors.plum,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-  },
-  pickupBtnText: {
-    color: colors.white,
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  checklistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  checklistDot: {
-    color: colors.pink,
-    fontSize: 18,
-    marginRight: 8,
-  },
-  checklistText: {
-    color: colors.ink,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  adjustStockBtn: {
+  adjustStockButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f5ebf1',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
-  adjustStockBtnText: {
+  adjustStockButtonText: {
     fontSize: 11,
     fontWeight: '700',
     color: colors.plum,
   },
-  stockFormBox: {
+  inventoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  inventoryTile: {
+    width: '48%',
+    backgroundColor: '#faf5f8',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#f0d9e5',
+  },
+  inventoryTileWarning: {
+    backgroundColor: '#fff1f2',
+    borderColor: '#fca5a5',
+  },
+  inventoryTileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  inventoryTileLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.rose,
+  },
+  inventoryTileValue: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: colors.plum,
+    marginVertical: 2,
+  },
+  inventoryTileValueWarning: {
+    color: '#e11d48',
+  },
+  inventoryTileSub: {
+    fontSize: 11,
+    color: colors.rose,
+    fontWeight: '500',
+  },
+
+  // Stock Form
+  stockUpdateForm: {
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
     borderTopColor: colors.line,
   },
-  stockFormTitle: {
+  stockUpdateHeader: {
     fontSize: 13,
     fontWeight: '800',
-    color: colors.ink,
+    color: colors.plum,
     marginBottom: 10,
   },
-  stockRow: {
+  stockFormRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  stockLabel: {
+  stockFieldLabel: {
     fontSize: 12,
     fontWeight: '700',
     color: colors.rose,
   },
-  stockOptionsRow: {
+  stockChipsRow: {
     flexDirection: 'row',
     gap: 8,
   },
@@ -916,19 +1084,19 @@ const styles = StyleSheet.create({
   stockChipTextActive: {
     color: colors.white,
   },
-  stockQtyInput: {
-    width: 70,
+  stockNumberInput: {
+    width: 64,
     height: 36,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.line,
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: colors.white,
     textAlign: 'center',
     fontSize: 15,
     fontWeight: '700',
     color: colors.ink,
   },
-  saveStockBtn: {
+  saveStockSubmitButton: {
     flexDirection: 'row',
     backgroundColor: colors.plum,
     borderRadius: 12,
@@ -937,58 +1105,62 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 6,
   },
-  saveStockBtnText: {
+  saveStockSubmitText: {
     color: colors.white,
     fontSize: 13,
     fontWeight: '800',
   },
-  emergencySosButton: {
+
+  // Orders
+  orderCard: {
+    marginBottom: 16,
+    padding: 18,
+    borderRadius: 20,
+  },
+  orderItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff1f2',
-    borderColor: '#fda4af',
-    borderWidth: 1.5,
-    borderRadius: 16,
-    padding: 12,
-    marginVertical: 10,
-    shadowColor: '#e11d48',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
   },
-  emergencySosIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#e11d48',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emergencySosTitle: {
-    fontSize: 15,
+  orderShopName: {
+    fontSize: 14,
     fontWeight: '800',
-    color: '#9f1239',
+    color: colors.ink,
   },
-  emergencySosBadge: {
-    backgroundColor: '#ffe4e6',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 6,
-    marginLeft: 6,
-    borderWidth: 1,
-    borderColor: '#f43f5e',
-  },
-  emergencySosBadgeText: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#e11d48',
-    letterSpacing: 0.5,
-  },
-  emergencySosSub: {
-    fontSize: 11,
-    color: '#881337',
+  orderDetails: {
+    fontSize: 12,
+    color: colors.rose,
     marginTop: 2,
-    fontWeight: '500',
+  },
+  confirmPickupButton: {
+    backgroundColor: colors.plum,
+    paddingVertical: 7,
+    paddingHorizontal: 13,
+    borderRadius: 10,
+  },
+  confirmPickupText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  // Checklist
+  checklistCard: {
+    marginBottom: 16,
+    padding: 18,
+    borderRadius: 20,
+  },
+  checklistItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  checklistTitle: {
+    fontSize: 13.5,
+    color: colors.ink,
+    fontWeight: '600',
   },
 });

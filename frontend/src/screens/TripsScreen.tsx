@@ -42,7 +42,7 @@ const ACTIVITY_OPTIONS = [
   { id: 'hiking', label: 'Hiking & Outdoors', icon: 'leaf-outline' },
   { id: 'long journey', label: 'Long Journey / Flight', icon: 'airplane-outline' },
   { id: 'office trip', label: 'Office / Work Trip', icon: 'business-outline' },
-  { id: 'wedding', label: 'Wedding / Festive Event', icon: 'sparkles-outline' },
+  { id: 'wedding', label: 'Wedding / Festive Event', icon: 'gift-outline' },
 ];
 
 export const TripsScreen: React.FC<TripsScreenProps> = ({ onBack }) => {

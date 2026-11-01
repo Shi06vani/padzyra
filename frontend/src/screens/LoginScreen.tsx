@@ -53,7 +53,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onOtpRequested }) => {
         await PadzyraApi.requestPhoneOtp(trimmedPhone, 'login');
         onOtpRequested(trimmedPhone, role, 'phone');
       } catch (error: any) {
-        setErrorMessage(error?.message || 'Unable to send SMS code. Please try again.');
+        const msg = error?.message;
+        if (msg === 'Aborted' || msg?.includes('Network request failed') || msg?.includes('connect')) {
+          setErrorMessage('Unable to connect. Please make sure the server is running.');
+        } else {
+          setErrorMessage(msg || 'Unable to send SMS code. Please try again.');
+        }
       } finally {
         setLoading(false);
       }
@@ -77,15 +82,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onOtpRequested }) => {
       await PadzyraApi.requestOtp(trimmedEmail, 'login');
       onOtpRequested(trimmedEmail, role, 'email');
     } catch (error: any) {
-      setErrorMessage(error?.message || 'Unable to send OTP. Please try again.');
+      const msg = error?.message;
+      if (msg === 'Aborted' || msg?.includes('Network request failed') || msg?.includes('connect')) {
+        setErrorMessage('Unable to connect. Please make sure the server is running.');
+      } else {
+        setErrorMessage(msg || 'Unable to send OTP. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
-  };
-
-  const saveServerUrl = () => {
-    ApiConfig.setBaseUrl(serverUrl);
-    setShowConfig(false);
   };
 
   return (
@@ -188,54 +193,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onOtpRequested }) => {
               <Text style={styles.errorText}>{errorMessage}</Text>
             ) : null}
           </Card>
-
-          <TouchableOpacity
-            activeOpacity={0.6}
-            style={styles.serverConfigTrigger}
-            onPress={() => setShowConfig(true)}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="server-outline" size={13} color={colors.rose} style={{ marginRight: 5 }} />
-              <Text style={styles.serverConfigText}>
-                Server: {ApiConfig.getBaseUrl()}
-              </Text>
-            </View>
-          </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Host Configuration Modal */}
-      <Modal visible={showConfig} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>API Server URL</Text>
-            <Text style={styles.modalSubtitle}>
-              Default is 10.0.2.2:3000 for Android emulator or localhost:3000 for iOS
-            </Text>
-            <TextInput
-              value={serverUrl}
-              onChangeText={setServerUrl}
-              style={styles.modalInput}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                onPress={() => setShowConfig(false)}
-                style={styles.modalCancel}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={saveServerUrl}
-                style={styles.modalSave}
-              >
-                <Text style={styles.modalSaveText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 };

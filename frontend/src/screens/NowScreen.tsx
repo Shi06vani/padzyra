@@ -478,21 +478,17 @@ export const NowScreen: React.FC<NowScreenProps> = ({
   // ==========================================
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Top Brand Banner */}
+      {/* Clean Top Header */}
       <View style={styles.topBar}>
-        <View style={styles.brandRow}>
-          <View style={styles.brandBadge}>
-            <Ionicons name="flash" size={12} color={colors.white} style={{ marginRight: 4 }} />
-            <Text style={styles.brandBadgeText}>PERIOD ESSENTIALS & DISPATCH</Text>
-          </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+          <Text style={styles.brandTitle}>Care & Essentials</Text>
           <View style={styles.discreetBadge}>
-            <Ionicons name="lock-closed" size={11} color={colors.rose} style={{ marginRight: 4 }} />
-            <Text style={styles.discreetBadgeText}>100% Confidential</Text>
+            <Ionicons name="shield-checkmark" size={12} color={colors.success} style={{ marginRight: 4 }} />
+            <Text style={styles.discreetBadgeText}>Discreet</Text>
           </View>
         </View>
-        <Text style={styles.brandTitle}>Period Essentials</Text>
         <Text style={styles.brandSubtitle}>
-          Buy dark chocolates, hot water bags, menstrual cups, tampons, cramp relief & emergency pads for confidential pickup.
+          Period essentials, relief care & pharmacy pickup counters
         </Text>
       </View>
 
@@ -508,13 +504,13 @@ export const NowScreen: React.FC<NowScreenProps> = ({
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.emergencyBannerTitle}>Emergency Period Mode</Text>
+              <Text style={styles.emergencyBannerTitle}>Emergency Care</Text>
               <View style={styles.emergencyBannerPill}>
-                <Text style={styles.emergencyBannerPillText}>HELP NOW</Text>
+                <Text style={styles.emergencyBannerPillText}>FAST ASSIST</Text>
               </View>
             </View>
             <Text style={styles.emergencyBannerSub}>
-              Find public restrooms, nearby pads, leak cleanup & cramp guides
+              Public clean restrooms, nearby pads & leak guidance
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color="#b91c1c" />
@@ -528,9 +524,14 @@ export const NowScreen: React.FC<NowScreenProps> = ({
           onPress={() => setMainView('store')}
           activeOpacity={0.8}
         >
-          <Text style={{ fontSize: 13, marginRight: 6 }}>🛍️</Text>
+          <Ionicons
+            name="bag-handle-outline"
+            size={15}
+            color={mainView === 'store' ? colors.white : colors.plum}
+            style={{ marginRight: 6 }}
+          />
           <Text style={[styles.mainNavSegmentText, mainView === 'store' && styles.mainNavSegmentTextActive]}>
-            Period Care Shop
+            Care Store
           </Text>
         </TouchableOpacity>
 
@@ -541,9 +542,9 @@ export const NowScreen: React.FC<NowScreenProps> = ({
         >
           <Ionicons
             name="location-outline"
-            size={14}
+            size={15}
             color={mainView === 'locator' ? colors.white : colors.plum}
-            style={{ marginRight: 5 }}
+            style={{ marginRight: 6 }}
           />
           <Text style={[styles.mainNavSegmentText, mainView === 'locator' && styles.mainNavSegmentTextActive]}>
             Counter Locator
@@ -912,7 +913,7 @@ export const NowScreen: React.FC<NowScreenProps> = ({
                   <Text style={styles.modalKicker}>EXPRESS PERIOD ESSENTIAL</Text>
                 </View>
                 <Text style={styles.modalStoreName}>
-                  {selectedItemForOrder?.emoji} {selectedItemForOrder?.name}
+                  {selectedItemForOrder?.name}
                 </Text>
                 <Text style={styles.modalStoreAddress} numberOfLines={1}>
                   {selectedItemForOrder?.tagline}
@@ -930,8 +931,12 @@ export const NowScreen: React.FC<NowScreenProps> = ({
             <ScrollView showsVerticalScrollIndicator={false} style={styles.modalBodyScroll}>
               {/* Product preview box */}
               <View style={styles.storePreviewCard}>
-                <View style={styles.storePreviewEmojiBox}>
-                  <Text style={{ fontSize: 32 }}>{selectedItemForOrder?.emoji}</Text>
+                <View style={[styles.storePreviewIconBox, { backgroundColor: `${selectedItemForOrder?.badgeColor || colors.plum}15` }]}>
+                  <Ionicons
+                    name={((selectedItemForOrder as any)?.icon || 'shield-outline') as any}
+                    size={28}
+                    color={selectedItemForOrder?.badgeColor || colors.plum}
+                  />
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.storePreviewTitle}>{selectedItemForOrder?.name}</Text>
@@ -2509,13 +2514,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f2dceb',
   },
-  storePreviewEmojiBox: {
+  storePreviewIconBox: {
     width: 52,
     height: 52,
     borderRadius: 14,
     backgroundColor: '#f6dceb',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(243, 213, 228, 0.7)',
   },
   storePreviewTitle: {
     fontSize: 14,

@@ -8,7 +8,7 @@ interface BrandHeaderProps {
 }
 
 export const BrandHeader: React.FC<BrandHeaderProps> = ({
-  subtitle = 'A quiet reminder, just for you.',
+  subtitle = '',
   compact = false,
 }) => {
   return (

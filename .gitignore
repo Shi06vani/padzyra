@@ -17,3 +17,11 @@ tmp/
 **/android/gradle/gradle-*/
 **/android/gradle/wrapper/*.zip
 **/android/local.properties
+
+# Secrets & Credentials
+*serviceAccountKey*.json
+*service-account*.json
+*.pem
+*.key
+**/tmp/
+

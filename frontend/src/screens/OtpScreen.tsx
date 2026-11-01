@@ -34,6 +34,40 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(30);
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState('');
+
+  // Countdown timer for resend
+  React.useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || resending) return;
+    setResending(true);
+    setErrorMessage('');
+    setResendSuccess('');
+
+    try {
+      if (method === 'phone') {
+        await PadzyraApi.requestPhoneOtp(identifier, 'login');
+      } else {
+        await PadzyraApi.requestOtp(identifier, 'login');
+      }
+      setResendCooldown(45);
+      setResendSuccess('New verification code sent!');
+      setTimeout(() => setResendSuccess(''), 4000);
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Failed to resend code. Please wait and try again.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleVerify = async () => {
     const trimmedCode = code.trim();
@@ -69,17 +103,13 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
       >
         <View style={styles.centerWrapper}>
           <BrandHeader
-            subtitle={
-              method === 'phone'
-                ? `Enter 6-digit code sent via SMS to ${identifier}`
-                : `Enter 6-digit code sent to ${identifier}`
-            }
+            subtitle={`Verification code sent to\n${identifier}`}
           />
 
           <Card style={styles.cardContainer}>
             <InputField
-              label="Code"
-              placeholder="123456"
+              label="Verification Code"
+              placeholder="Enter 6-digit code"
               value={code}
               onChangeText={(text) => {
                 setCode(text.replace(/[^0-9]/g, ''));
@@ -93,16 +123,43 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
             />
 
             <PrimaryButton
-              title="Continue"
+              title="Verify & Continue"
               icon={<Ionicons name="checkmark-outline" size={18} color={colors.white} />}
               onPress={handleVerify}
               loading={loading}
               style={styles.continueButton}
             />
 
+            {resendSuccess ? (
+              <Text style={styles.resendSuccessText}>{resendSuccess}</Text>
+            ) : null}
+
             {errorMessage ? (
               <Text style={styles.errorText}>{errorMessage}</Text>
             ) : null}
+
+            {/* Resend OTP Section */}
+            <View style={styles.resendRow}>
+              <Text style={styles.resendPromptText}>Didn't receive code? </Text>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                disabled={resendCooldown > 0 || resending}
+                onPress={handleResend}
+              >
+                <Text
+                  style={[
+                    styles.resendActionText,
+                    resendCooldown > 0 && styles.resendActionDisabled,
+                  ]}
+                >
+                  {resending
+                    ? 'Sending...'
+                    : resendCooldown > 0
+                    ? `Resend in ${resendCooldown}s`
+                    : 'Resend Code'}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               activeOpacity={0.7}
@@ -111,7 +168,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
             >
               <View style={styles.backButtonContent}>
                 <Ionicons name="arrow-back-outline" size={16} color="#b06f98" style={{ marginRight: 6 }} />
-                <Text style={styles.backText}>Use another email</Text>
+                <Text style={styles.backText}>Back to Login</Text>
               </View>
             </TouchableOpacity>
           </Card>
@@ -165,5 +222,33 @@ const styles = StyleSheet.create({
     color: '#b06f98',
     fontSize: 15,
     fontWeight: '800',
+  },
+  resendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 18,
+  },
+  resendPromptText: {
+    color: colors.rose,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  resendActionText: {
+    color: colors.plum,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  resendActionDisabled: {
+    color: colors.rose,
+    fontWeight: '500',
+    opacity: 0.7,
+  },
+  resendSuccessText: {
+    color: colors.success,
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 12,
   },
 });

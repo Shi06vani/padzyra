@@ -32,6 +32,7 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
   const [suppliesHistory, setSuppliesHistory] = useState<any[]>([]);
   const [notificationHistory, setNotificationHistory] = useState<any[]>([]);
   const [todayAlert, setTodayAlert] = useState<any>(null);
+  const [sendingReminder, setSendingReminder] = useState(false);
 
   // Copy code feedback
   const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
@@ -125,6 +126,28 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
       setTodayAlert(null);
     } catch {
       // Ignore
+    }
+  };
+
+  const handleSendReminder = async (kind: string = 'test') => {
+    setSendingReminder(true);
+    try {
+      const res = await PadzyraApi.sendReminderNotification({ kind });
+      Alert.alert(
+        'Reminder Dispatched! 🔔',
+        `"${res.title}"\n${res.body}\n\nFirebase Cloud Messaging push notification sent to registered device(s).`,
+        [{ text: 'OK' }]
+      );
+      const [notifData, alertData] = await Promise.all([
+        PadzyraApi.getNotificationHistory().catch(() => []),
+        PadzyraApi.getTodayAlert().catch(() => null),
+      ]);
+      setNotificationHistory(notifData || []);
+      setTodayAlert(alertData || null);
+    } catch (err: any) {
+      Alert.alert('Reminder Error', err?.message || 'Could not send reminder');
+    } finally {
+      setSendingReminder(false);
     }
   };
 
@@ -242,8 +265,8 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
       {/* Top Professional Header */}
       <View style={styles.topBar}>
         <View style={styles.topBarTextContainer}>
-          <Text style={styles.brandSubtitle}>PADZYRA DISPATCH</Text>
-          <Text style={styles.brandTitle}>Activity & Orders</Text>
+          <Text style={styles.brandTitle}>Orders & Activity</Text>
+          <Text style={styles.brandSubtitle}>Discreet pharmacy pickups & pad history</Text>
         </View>
 
         <TouchableOpacity
@@ -850,6 +873,78 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
             <Text style={styles.mutedText}>
               Padzyra notifications are completely disguised as daily wellness reminders (such as hydration or posture checks) so your personal cycle schedule stays 100% private.
             </Text>
+          </Card>
+
+          {/* Firebase Cloud Messaging Reminder Trigger */}
+          <Card>
+            <View style={styles.cardHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="notifications-circle" size={18} color={colors.rose} style={{ marginRight: 6 }} />
+                <Text style={styles.cardHeader}>FIREBASE CLOUD REMINDERS</Text>
+              </View>
+              <View style={[styles.badgeContainer, { backgroundColor: '#e8f5e9' }]}>
+                <Text style={[styles.badgeText, { color: '#2e7d32' }]}>FCM Active ⚡</Text>
+              </View>
+            </View>
+            <Text style={styles.mutedText}>
+              Send or test real-time reminder notifications delivered via Firebase Cloud Messaging.
+            </Text>
+
+            <View style={{ marginTop: 12 }}>
+              <TouchableOpacity
+                style={[styles.primaryActionBtn, { backgroundColor: colors.plum, marginBottom: 8 }]}
+                activeOpacity={0.8}
+                onPress={() => handleSendReminder('test')}
+                disabled={sendingReminder}
+              >
+                {sendingReminder ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <>
+                    <Ionicons name="paper-plane-outline" size={16} color={colors.white} style={{ marginRight: 6 }} />
+                    <Text style={styles.primaryActionText}>Send Test Reminder (Firebase)</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                <TouchableOpacity
+                  style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('lunch')}
+                  disabled={sendingReminder}
+                >
+                  <Ionicons name="water-outline" size={13} color={colors.plum} />
+                  <Text style={[styles.trustPillText, { color: colors.plum }]}>Lunch Hydration</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('chg14')}
+                  disabled={sendingReminder}
+                >
+                  <Ionicons name="time-outline" size={13} color={colors.plum} />
+                  <Text style={[styles.trustPillText, { color: colors.plum }]}>Pad Change (4h)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('heat')}
+                  disabled={sendingReminder}
+                >
+                  <Ionicons name="flame-outline" size={13} color={colors.plum} />
+                  <Text style={[styles.trustPillText, { color: colors.plum }]}>Warm Compress</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('night')}
+                  disabled={sendingReminder}
+                >
+                  <Ionicons name="moon-outline" size={13} color={colors.plum} />
+                  <Text style={[styles.trustPillText, { color: colors.plum }]}>Night Pad</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </Card>
 
           {/* Notification History List */}

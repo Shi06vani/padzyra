@@ -23,11 +23,13 @@ import { AUTO_LOCK_TIMEOUT_OPTIONS } from '../services/appLockStorage';
 interface SettingsScreenProps {
   onLogout: () => void;
   onSetPinRequested: () => void;
+  onNavigateToActivity?: () => void;
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onLogout,
   onSetPinRequested,
+  onNavigateToActivity,
 }) => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>({});
@@ -149,8 +151,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.topBar}>
-        <Text style={styles.brandSubtitle}>PADZYRA</Text>
-        <Text style={styles.brandTitle}>{isGirl ? 'You' : 'Settings'}</Text>
+        <Text style={styles.brandTitle}>{isGirl ? 'Profile & Settings' : 'Partner Settings'}</Text>
+        <Text style={styles.brandSubtitle}>Account, privacy, security & cycle preferences</Text>
       </View>
 
       {/* Monthly Expense Card (for girl role) */}
@@ -195,13 +197,37 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             {user.role === 'shop' ? 'Medical Shop Partner' : 'Personal Account'}
           </Text>
         </View>
+
+        {onNavigateToActivity && isGirl ? (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onNavigateToActivity}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 14,
+              paddingTop: 12,
+              borderTopWidth: 1,
+              borderTopColor: colors.line,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="receipt-outline" size={18} color={colors.plum} style={{ marginRight: 8 }} />
+              <Text style={{ fontSize: 14, fontWeight: '700', color: colors.plum }}>
+                Orders & Care Activity
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.rose} />
+          </TouchableOpacity>
+        ) : null}
       </Card>
 
       {/* Padzyra Plus & Membership (for personal girl account) */}
       {isGirl ? (
         <Card>
           <View style={styles.cardHeaderRow}>
-            <Ionicons name="sparkles" size={16} color={colors.plum} style={styles.cardHeaderIcon} />
+            <Ionicons name="ribbon-outline" size={17} color={colors.plum} style={styles.cardHeaderIcon} />
             <Text style={styles.cardHeader}>PADZYRA PLUS & MEMBERSHIP</Text>
           </View>
 

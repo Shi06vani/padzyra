@@ -707,6 +707,27 @@ export const PadzyraApi = {
     }>>('/notifications/history');
   },
 
+  async sendReminderNotification(options?: { kind?: string; title?: string; body?: string }) {
+    return apiRequest<{
+      alertId: string;
+      title: string;
+      body: string;
+      kind: string;
+      fcmResult?: any;
+    }>('/notifications/reminder', {
+      method: 'POST',
+      body: options || {},
+    });
+  },
+
+  async getFcmStatus() {
+    return apiRequest<{
+      firebaseInitialized: boolean;
+      tokensCount: number;
+      tokens: Array<{ id: string; platform: string; registeredAt: string }>;
+    }>('/notifications/fcm/status');
+  },
+
   // Daily Feeling Logs History
   async getDays(from?: string, to?: string) {
     const params = [from ? `from=${from}` : '', to ? `to=${to}` : ''].filter(Boolean).join('&');
