@@ -10,6 +10,8 @@ async function start() {
   try {
     await sequelize.authenticate();
     console.log('PostgreSQL connection established.');
+    await sequelize.sync({ alter: false });
+    console.log('Database models synchronized.');
     await ensureSourcesSeeded();
   } catch (error) {
     console.error('PostgreSQL is not ready:', error.message);

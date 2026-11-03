@@ -54,7 +54,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onOtpRequested }) => {
         onOtpRequested(trimmedPhone, role, 'phone');
       } catch (error: any) {
         const msg = error?.message;
-        if (msg === 'Aborted' || msg?.includes('Network request failed') || msg?.includes('connect')) {
+        if (msg?.includes('ECONNREFUSED') || msg?.includes('5432')) {
+          setErrorMessage('Server error: Database not connected on Render (ECONNREFUSED 5432).');
+        } else if (msg === 'Aborted' || msg?.includes('Network request failed')) {
           setErrorMessage('Unable to connect. Please make sure the server is running.');
         } else {
           setErrorMessage(msg || 'Unable to send SMS code. Please try again.');
@@ -83,7 +85,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onOtpRequested }) => {
       onOtpRequested(trimmedEmail, role, 'email');
     } catch (error: any) {
       const msg = error?.message;
-      if (msg === 'Aborted' || msg?.includes('Network request failed') || msg?.includes('connect')) {
+      if (msg?.includes('ECONNREFUSED') || msg?.includes('5432')) {
+        setErrorMessage('Server error: Database not connected on Render (ECONNREFUSED 5432).');
+      } else if (msg === 'Aborted' || msg?.includes('Network request failed')) {
         setErrorMessage('Unable to connect. Please make sure the server is running.');
       } else {
         setErrorMessage(msg || 'Unable to send OTP. Please try again.');

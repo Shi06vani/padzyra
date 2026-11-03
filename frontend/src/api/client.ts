@@ -92,7 +92,8 @@ export async function apiRequest<T = any>(
   const url = `${ApiConfig.getBaseUrl()}${cleanEndpoint}`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  // 30 second timeout allows for Render free tier cold-starts and slower mobile networks
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   let response: Response;
   try {

@@ -1,7 +1,16 @@
 const env = require('./env');
 
 function dialectOptions() {
-  if (!env.db.ssl) {
+  const isSsl =
+    env.db.ssl ||
+    Boolean(
+      env.db.url &&
+        (env.db.url.includes('neon.tech') ||
+          env.db.url.includes('sslmode=require') ||
+          env.db.url.includes('ssl=true'))
+    );
+
+  if (!isSsl) {
     return {};
   }
 
@@ -30,9 +39,10 @@ function buildConfig(database) {
     dialectOptions: dialectOptions(),
   };
 
-  if (env.db.url && env.isProduction) {
+  if (env.db.url) {
     return {
       ...base,
+      url: env.db.url,
       use_env_variable: 'DATABASE_URL',
     };
   }
