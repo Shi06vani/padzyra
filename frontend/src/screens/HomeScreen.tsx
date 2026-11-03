@@ -10,10 +10,12 @@ import {
   Alert,
   TextInput,
   Platform,
+  Modal,
 } from 'react-native';
 import { colors } from '../theme/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Card } from '../components/Card';
+import { TabKey } from '../components/BottomTabBar';
 import { PadzyraApi } from '../api/client';
 import { AiCoachModal } from '../components/AiCoachModal';
 import { SubscriptionModal } from '../components/SubscriptionModal';
@@ -22,6 +24,7 @@ interface HomeScreenProps {
   onNavigateToNow: () => void;
   onRequestPin: () => void;
   onNavigateToEmergency?: () => void;
+  onNavigateToTab?: (tab: TabKey) => void;
 }
 
 const FOCUS_TEXTS: Record<string, string> = {
@@ -47,6 +50,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onNavigateToNow,
   onRequestPin,
   onNavigateToEmergency,
+  onNavigateToTab,
 }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -56,6 +60,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [orders, setOrders] = useState<any[]>([]);
   const [feelings, setFeelings] = useState<{ cramps?: string; mood?: string }>({});
   const [error, setError] = useState('');
+
+  // App Flow Guide modal
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   // Stock updater states
   const [showStockForm, setShowStockForm] = useState(false);
@@ -218,18 +225,118 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <View style={styles.topHeader}>
         <View>
           <Text style={styles.dateLabel}>{getFormattedDate()}</Text>
-          <Text style={styles.greetingTitle}>Today's Care</Text>
+          <Text style={styles.greetingTitle}>Padzyra Care</Text>
         </View>
 
-        {/* Quick Emergency / SOS Shortcut */}
+        <View style={styles.headerRightActions}>
+          {/* Quick Flow Guide */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.headerGuideButton}
+            onPress={() => setShowGuideModal(true)}
+          >
+            <Ionicons name="compass-outline" size={15} color={colors.plum} />
+            <Text style={styles.headerGuideText}>Flow</Text>
+          </TouchableOpacity>
+
+          {/* Quick Emergency / SOS Shortcut */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.headerSosButton}
+            onPress={onNavigateToEmergency || onNavigateToNow}
+          >
+            <Ionicons name="flash" size={13} color="#ffffff" style={{ marginRight: 3 }} />
+            <Text style={styles.headerSosText}>SOS</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 4-Pillar Quick Action Strip (Icon-First, Zero Clutter) */}
+      <View style={styles.quickFlowGrid}>
         <TouchableOpacity
+          style={styles.quickFlowCard}
           activeOpacity={0.8}
-          style={styles.headerSosButton}
-          onPress={onNavigateToEmergency || onNavigateToNow}
+          onPress={() => (onNavigateToTab ? onNavigateToTab('calendar') : null)}
         >
-          <Ionicons name="medical" size={15} color="#e11d48" />
-          <Text style={styles.headerSosText}>Emergency</Text>
+          <View style={[styles.quickFlowIconCircle, { backgroundColor: '#ffe4e6' }]}>
+            <Ionicons name="calendar" size={20} color="#e11d48" />
+          </View>
+          <Text style={styles.quickFlowLabel}>Cycle</Text>
+          <Text style={styles.quickFlowBadge}>{isPeriodActive ? 'Active' : `${dashboard.inDays ?? 28}d left`}</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quickFlowCard}
+          activeOpacity={0.8}
+          onPress={() => setShowStockForm(true)}
+        >
+          <View style={[styles.quickFlowIconCircle, { backgroundColor: '#f3e8ff' }]}>
+            <Ionicons name="bag-handle" size={20} color="#9333ea" />
+          </View>
+          <Text style={styles.quickFlowLabel}>My Bag</Text>
+          <Text style={styles.quickFlowBadge}>{bagDay + bagNight} Pads</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quickFlowCard}
+          activeOpacity={0.8}
+          onPress={onNavigateToNow}
+        >
+          <View style={[styles.quickFlowIconCircle, { backgroundColor: '#e0f2fe' }]}>
+            <Ionicons name="storefront" size={20} color="#0284c7" />
+          </View>
+          <Text style={styles.quickFlowLabel}>Pharmacy</Text>
+          <Text style={styles.quickFlowBadge}>Pickup</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.quickFlowCard}
+          activeOpacity={0.8}
+          onPress={onNavigateToEmergency}
+        >
+          <View style={[styles.quickFlowIconCircle, { backgroundColor: '#fee2e2' }]}>
+            <Ionicons name="location" size={20} color="#dc2626" />
+          </View>
+          <Text style={styles.quickFlowLabel}>Restrooms</Text>
+          <Text style={[styles.quickFlowBadge, { color: '#dc2626' }]}>Clean</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Visual Journey Bar (Clean, Minimalist 1-2-3-4 Flow) */}
+      <View style={styles.journeyBar}>
+        <View style={styles.journeyStep}>
+          <View style={[styles.journeyDot, { backgroundColor: '#e11d48' }]}>
+            <Ionicons name="water" size={11} color="#ffffff" />
+          </View>
+          <Text style={styles.journeyLabel}>1. Track</Text>
+        </View>
+
+        <View style={styles.journeyLine} />
+
+        <View style={styles.journeyStep}>
+          <View style={[styles.journeyDot, { backgroundColor: '#9333ea' }]}>
+            <Ionicons name="bag-check" size={11} color="#ffffff" />
+          </View>
+          <Text style={styles.journeyLabel}>2. Pouch</Text>
+        </View>
+
+        <View style={styles.journeyLine} />
+
+        <View style={styles.journeyStep}>
+          <View style={[styles.journeyDot, { backgroundColor: '#0284c7' }]}>
+            <Ionicons name="storefront" size={11} color="#ffffff" />
+          </View>
+          <Text style={styles.journeyLabel}>3. Pickup</Text>
+        </View>
+
+        <View style={styles.journeyLine} />
+
+        <View style={styles.journeyStep}>
+          <View style={[styles.journeyDot, { backgroundColor: '#dc2626' }]}>
+            <Ionicons name="shield-checkmark" size={11} color="#ffffff" />
+          </View>
+          <Text style={styles.journeyLabel}>4. SOS</Text>
+        </View>
       </View>
 
       {error ? (
@@ -638,6 +745,79 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         visible={showSubModal}
         onClose={() => setShowSubModal(false)}
       />
+
+      {/* Visual App Flow Modal */}
+      <Modal
+        visible={showGuideModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowGuideModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.guideModalCard}>
+            <View style={styles.guideModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="compass" size={20} color={colors.plum} style={{ marginRight: 8 }} />
+                <Text style={styles.guideModalTitle}>Padzyra Quick Guide</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowGuideModal(false)}>
+                <Ionicons name="close-circle" size={24} color={colors.rose} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.guideList}>
+              <View style={styles.guideRow}>
+                <View style={[styles.guideIconBubble, { backgroundColor: '#ffe4e6' }]}>
+                  <Ionicons name="calendar-outline" size={22} color="#e11d48" />
+                </View>
+                <View style={styles.guideContent}>
+                  <Text style={styles.guideStepTitle}>1. Track Cycle</Text>
+                  <Text style={styles.guideStepDesc}>Predict periods & fertile dates automatically</Text>
+                </View>
+              </View>
+
+              <View style={styles.guideRow}>
+                <View style={[styles.guideIconBubble, { backgroundColor: '#f3e8ff' }]}>
+                  <Ionicons name="bag-handle-outline" size={22} color="#9333ea" />
+                </View>
+                <View style={styles.guideContent}>
+                  <Text style={styles.guideStepTitle}>2. Check Bag Inventory</Text>
+                  <Text style={styles.guideStepDesc}>Never run out of emergency pads when outside</Text>
+                </View>
+              </View>
+
+              <View style={styles.guideRow}>
+                <View style={[styles.guideIconBubble, { backgroundColor: '#e0f2fe' }]}>
+                  <Ionicons name="storefront-outline" size={22} color="#0284c7" />
+                </View>
+                <View style={styles.guideContent}>
+                  <Text style={styles.guideStepTitle}>3. Discreet Pharmacy Pickup</Text>
+                  <Text style={styles.guideStepDesc}>Order secretly & pick up at nearby medical shops</Text>
+                </View>
+              </View>
+
+              <View style={styles.guideRow}>
+                <View style={[styles.guideIconBubble, { backgroundColor: '#fee2e2' }]}>
+                  <Ionicons name="flash-outline" size={22} color="#dc2626" />
+                </View>
+                <View style={styles.guideContent}>
+                  <Text style={styles.guideStepTitle}>4. Emergency SOS & Toilets</Text>
+                  <Text style={styles.guideStepDesc}>Find clean restrooms & instant emergency relief</Text>
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.guideGotItBtn}
+              activeOpacity={0.85}
+              onPress={() => setShowGuideModal(false)}
+            >
+              <Ionicons name="checkmark" size={18} color="#ffffff" style={{ marginRight: 6 }} />
+              <Text style={styles.guideGotItText}>Got It</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -664,37 +844,216 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   dateLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: colors.rose,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   greetingTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '900',
     color: colors.plum,
     letterSpacing: -0.4,
-    marginTop: 2,
+    marginTop: 1,
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerGuideButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(235, 195, 215, 0.8)',
+    shadowColor: colors.plum,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  headerGuideText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.plum,
+    marginLeft: 4,
   },
   headerSosButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffe4e6',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
+    backgroundColor: '#e11d48',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 14,
+    shadowColor: '#e11d48',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   headerSosText: {
-    color: '#e11d48',
+    color: '#ffffff',
     fontSize: 12,
     fontWeight: '800',
-    marginLeft: 4,
+    letterSpacing: 0.5,
+  },
+
+  // 4-Pillar Quick Action Strip
+  quickFlowGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    gap: 8,
+  },
+  quickFlowCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(235, 195, 215, 0.7)',
+    shadowColor: colors.plum,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  quickFlowIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  quickFlowLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.ink,
+    textAlign: 'center',
+  },
+  quickFlowBadge: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.rose,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+
+  // Visual Journey Strip
+  journeyBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(235, 195, 215, 0.6)',
+  },
+  journeyStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  journeyDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+  },
+  journeyLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.ink,
+  },
+  journeyLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(235, 195, 215, 0.8)',
+    marginHorizontal: 4,
+  },
+
+  // Guide Modal
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(30, 10, 25, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  guideModalCard: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+  },
+  guideModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  guideModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.ink,
+  },
+  guideList: {
+    marginBottom: 20,
+    gap: 14,
+  },
+  guideRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  guideIconBubble: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  guideContent: {
+    flex: 1,
+  },
+  guideStepTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.ink,
+    marginBottom: 2,
+  },
+  guideStepDesc: {
+    fontSize: 12,
+    color: colors.rose,
+    lineHeight: 16,
+  },
+  guideGotItBtn: {
+    backgroundColor: colors.plum,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  guideGotItText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '800',
   },
   errorBanner: {
     flexDirection: 'row',

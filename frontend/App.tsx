@@ -194,6 +194,7 @@ function AppContent() {
                     <HomeScreen
                       onNavigateToNow={() => setCurrentTab('now')}
                       onNavigateToEmergency={() => setShowEmergency(true)}
+                      onNavigateToTab={(tab) => setCurrentTab(tab)}
                       onRequestPin={() => {
                         setIsSettingPin(false);
                         setFlowState('pinLock');

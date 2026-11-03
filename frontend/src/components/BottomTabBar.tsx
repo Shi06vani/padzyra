@@ -44,7 +44,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
       : [
           { key: 'home', label: 'Today', icon: 'flower-outline', iconActive: 'flower' },
           { key: 'calendar', label: 'Cycle', icon: 'calendar-outline', iconActive: 'calendar' },
-          { key: 'now', label: 'Care', icon: 'bag-handle-outline', iconActive: 'bag-handle' },
+          { key: 'now', label: 'Pharmacy', icon: 'storefront-outline', iconActive: 'storefront' },
           { key: 'threads', label: 'Community', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
           { key: 'settings', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
         ];
