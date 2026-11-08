@@ -63,7 +63,7 @@ async function requirePin(req, res, next) {
     if (!user.pinHash) throw new HttpError(403, 'Set a PIN first');
     if (user.pinLockedUntil && user.pinLockedUntil > new Date()) throw new HttpError(429, 'PIN locked');
     if (!session.unlockedUntil || session.unlockedUntil <= new Date()) throw new HttpError(403, 'PIN required');
-    session.unlockedUntil = new Date(Date.now() + 60 * 1000);
+    session.unlockedUntil = new Date(Date.now() + 15 * 60 * 1000);
     await session.save();
     next();
   } catch (error) {

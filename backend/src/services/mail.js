@@ -124,7 +124,16 @@ async function sendOtpMail(email, code, purpose = 'login') {
     login: 'Your Padzyra Verification Code',
     delete: 'Confirm Account Deletion - Padzyra',
     logout: 'Confirm Logout All Devices - Padzyra',
+    'reset-pin': 'Reset Your Padzyra Security PIN',
   };
+
+  const purposeDescriptions = {
+    login: 'login verification',
+    delete: 'account deletion',
+    logout: 'logout confirmation',
+    'reset-pin': 'security PIN reset',
+  };
+  const purposeText = purposeDescriptions[purpose] || purpose;
 
   const subject = subjectTitles[purpose] || 'Your Padzyra Code';
   const html = `
@@ -135,7 +144,7 @@ async function sendOtpMail(email, code, purpose = 'login') {
       </div>
 
       <div style="background-color: #ffffff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 4px 12px rgba(201, 140, 176, 0.15);">
-        <p style="color: #4a2c40; font-size: 15px; margin: 0 0 16px 0; font-weight: 600;">Use the verification code below to complete your ${purpose}:</p>
+        <p style="color: #4a2c40; font-size: 15px; margin: 0 0 16px 0; font-weight: 600;">Use the verification code below to complete your ${purposeText}:</p>
         <div style="display: inline-block; background-color: #fcebf4; padding: 12px 28px; border-radius: 12px; font-size: 32px; font-weight: 900; letter-spacing: 6px; color: #6a3b59; margin-bottom: 16px;">
           ${code}
         </div>
@@ -147,7 +156,7 @@ async function sendOtpMail(email, code, purpose = 'login') {
       </div>
     </div>
   `;
-  const text = `Your Padzyra ${purpose} code is: ${code}. Valid for 15 minutes.`;
+  const text = `Your Padzyra ${purposeText} code is: ${code}. Valid for 15 minutes.`;
 
   try {
     await dispatchEmail({ to: email, subject, html, text });

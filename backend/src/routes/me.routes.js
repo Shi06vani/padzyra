@@ -19,7 +19,7 @@ router.get('/me/export', requireUser, requirePin, asyncHandler(async (req, res) 
 }));
 
 router.patch('/me', requireUser, asyncHandler(async (req, res) => {
-  send(res, await account.updateMe(req.auth.user, req.body));
+  send(res, await account.updateMe(req.auth.user, req.body, req.auth.session));
 }));
 
 router.delete('/me', requireUser, asyncHandler(async (req, res) => {

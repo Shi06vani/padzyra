@@ -203,8 +203,10 @@ export const PadzyraApi = {
       authenticated: boolean;
       role?: 'girl' | 'shop';
       email?: string;
+      destination?: string;
       pinSet?: boolean;
       pinUnlocked?: boolean;
+      unlockedUntil?: string | null;
     }>('/auth/status');
   },
 
@@ -213,6 +215,59 @@ export const PadzyraApi = {
       method: 'POST',
       body: { pin },
     });
+  },
+
+  async requestPinResetOtp(params?: { identifier?: string; method?: 'email' | 'phone' }) {
+    const body: any = {};
+    if (params?.identifier) {
+      if (params.method === 'phone') {
+        body.phone = params.identifier;
+      } else {
+        body.email = params.identifier;
+      }
+    }
+    return apiRequest<{
+      retryAfter: number;
+      code?: string;
+      testCode?: string;
+      destination?: string;
+    }>('/auth/pin/request-reset', {
+      method: 'POST',
+      body,
+    });
+  },
+
+  async resetPin(params: {
+    code: string;
+    newPin: string;
+    identifier?: string;
+    method?: 'email' | 'phone';
+  }) {
+    const body: any = {
+      code: params.code.trim(),
+      newPin: params.newPin.trim(),
+    };
+    if (params.identifier) {
+      if (params.method === 'phone') {
+        body.phone = params.identifier.trim();
+      } else {
+        body.email = params.identifier.trim();
+      }
+    }
+    const result = await apiRequest<{
+      success: boolean;
+      message?: string;
+      until?: string;
+      token?: string;
+      user?: any;
+    }>('/auth/pin/reset', {
+      method: 'POST',
+      body,
+    });
+    if (result.token) {
+      ApiConfig.setAuthToken(result.token);
+    }
+    return result;
   },
 
   async lock() {

@@ -25,6 +25,7 @@ import {
   EmergencyDeliveryProduct,
   EmergencyOrder,
 } from '../api/client';
+import { NativeLocationService } from '../services/nativeLocation';
 import {
   LEAK_CLEANUP_STEPS,
   LEAK_CHECKLIST,
@@ -87,78 +88,21 @@ export const EmergencyScreen: React.FC<EmergencyScreenProps> = ({
     setGpsLoading(true);
     setToiletError('');
     try {
-      if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Emergency Location Access',
-            message: 'Padzyra uses your location only to locate the nearest restrooms and pharmacies during emergencies.',
-            buttonPositive: 'Allow GPS',
-            buttonNegative: 'Cancel',
-          }
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          setLocationLabel('GPS access denied (Using manual search)');
-          setGpsLoading(false);
-          return;
-        }
-      }
-
-      // 1. Try browser / native navigator.geolocation if available
-      const geo = (globalThis as any).navigator?.geolocation;
-      let geoSuccess = false;
-      if (geo && typeof geo.getCurrentPosition === 'function') {
-        await new Promise<void>((resolve) => {
-          geo.getCurrentPosition(
-            (pos: any) => {
-              geoSuccess = true;
-              const { latitude, longitude } = pos.coords;
-              setUserCoords({ lat: latitude, lng: longitude });
-              setLocationLabel(`📍 GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`);
-              loadToilets(latitude, longitude);
-              loadShops(latitude, longitude, productCategory);
-              checkDelivery(latitude, longitude);
-              resolve();
-            },
-            () => resolve(),
-            { enableHighAccuracy: true, timeout: 4000, maximumAge: 10000 }
-          );
-          setTimeout(() => resolve(), 4000);
-        });
-      }
-
-      if (!geoSuccess) {
-        // 2. High-accuracy Live IP Geolocation (Resolves actual device city & coordinates!)
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 4000);
-          const res = await fetch('https://ipwho.is/', { signal: controller.signal });
-          clearTimeout(timer);
-          const data = await res.json();
-          if (data && data.success && data.latitude && data.longitude) {
-            const cityText = data.city ? `📍 ${data.city}${data.region ? ', ' + data.region : ''}` : '📍 Current Location';
-            setUserCoords({ lat: data.latitude, lng: data.longitude });
-            setLocationLabel(cityText);
-            loadToilets(data.latitude, data.longitude);
-            loadShops(data.latitude, data.longitude, productCategory);
-            checkDelivery(data.latitude, data.longitude);
-            return;
-          }
-        } catch {
-          // fallback
-        }
-
-        // Default fallback
-        const defaultLat = 23.167;
-        const defaultLng = 79.95;
-        setUserCoords({ lat: defaultLat, lng: defaultLng });
-        setLocationLabel('📍 Auto Location Active');
-        loadToilets(defaultLat, defaultLng);
-        loadShops(defaultLat, defaultLng, productCategory);
-        checkDelivery(defaultLat, defaultLng);
-      }
-    } catch {
-      setLocationLabel('GPS unavailable (Enter location below)');
+      const loc = await NativeLocationService.getCurrentLocation();
+      setUserCoords({ lat: loc.latitude, lng: loc.longitude });
+      const display = loc.displayName
+        ? `📍 ${loc.displayName}`
+        : `📍 GPS (${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°)`;
+      setLocationLabel(display);
+      loadToilets(loc.latitude, loc.longitude);
+      loadShops(loc.latitude, loc.longitude, productCategory);
+      checkDelivery(loc.latitude, loc.longitude);
+    } catch (err: any) {
+      setLocationLabel('📍 GPS Off (Search area below)');
+      Alert.alert(
+        'Location Required',
+        err?.message || 'Could not fetch device GPS. Please enable Location/GPS in device settings, or search your area name below.'
+      );
     } finally {
       setGpsLoading(false);
     }
@@ -531,8 +475,8 @@ export const EmergencyScreen: React.FC<EmergencyScreenProps> = ({
                 <Text style={styles.emptySub}>
                   Try entering your area or city name in the search box above.
                 </Text>
-                <TouchableOpacity style={styles.retryBtn} onPress={() => loadToilets(12.9716, 77.5946)}>
-                  <Text style={styles.retryBtnText}>Retry Central Hub</Text>
+                <TouchableOpacity style={styles.retryBtn} onPress={requestLocation}>
+                  <Text style={styles.retryBtnText}>Refresh GPS Location</Text>
                 </TouchableOpacity>
               </Card>
             ) : (

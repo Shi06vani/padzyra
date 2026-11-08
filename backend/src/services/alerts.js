@@ -211,7 +211,7 @@ async function issue(user, kind, day, actions) {
     day,
     tokenHash: sha256(token),
     tokenEnc: encryptJson({ token }),
-    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000),
   });
   return {
     title: msg.title,

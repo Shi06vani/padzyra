@@ -22,7 +22,7 @@ import { AUTO_LOCK_TIMEOUT_OPTIONS } from '../services/appLockStorage';
 
 interface SettingsScreenProps {
   onLogout: () => void;
-  onSetPinRequested: () => void;
+  onSetPinRequested: (hasPin?: boolean) => void;
   onNavigateToActivity?: () => void;
 }
 
@@ -584,7 +584,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {/* Account 4-digit PIN */}
         <TouchableOpacity
           style={styles.actionRowBtn}
-          onPress={onSetPinRequested}
+          onPress={() => onSetPinRequested(Boolean(user.pin))}
         >
           <View style={styles.actionRowLeft}>
             <Ionicons name="key-outline" size={18} color={colors.plum} style={{ marginRight: 10 }} />

@@ -71,12 +71,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [savingStock, setSavingStock] = useState(false);
   const [showAiCoach, setShowAiCoach] = useState(false);
   const [showSubModal, setShowSubModal] = useState(false);
+  const [todayAlert, setTodayAlert] = useState<any>(null);
 
   const loadData = useCallback(async () => {
     try {
       setError('');
       const todayIso = new Date().toISOString().slice(0, 10);
-      const [dashData, suppData, listData, ordersData] = await Promise.all([
+      const [dashData, suppData, listData, ordersData, alertData] = await Promise.all([
         PadzyraApi.getDashboard().catch((e) => {
           if (e?.message === 'PIN required') onRequestPin();
           throw e;
@@ -84,12 +85,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         PadzyraApi.getSupplies().catch(() => []),
         PadzyraApi.getChecklist().catch(() => []),
         PadzyraApi.getOrders().catch(() => []),
+        PadzyraApi.getTodayAlert().catch(() => null),
       ]);
 
       setDashboard(dashData || {});
       setSupplies(suppData || []);
       setChecklist(listData || []);
       setOrders(ordersData || []);
+      setTodayAlert(alertData || null);
 
       const feelData = await PadzyraApi.getDayFeelings(todayIso).catch(() => ({}));
       setFeelings(feelData || {});
@@ -131,6 +134,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       loadData();
     } catch (err: any) {
       Alert.alert('Notice', err?.message || 'Could not log pad usage');
+    }
+  };
+
+  const handleDismissReminder = async () => {
+    try {
+      await PadzyraApi.dismissAlert();
+      setTodayAlert(null);
+    } catch {
+      setTodayAlert(null);
     }
   };
 
@@ -342,6 +354,58 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <View style={styles.errorBanner}>
           <Ionicons name="alert-circle-outline" size={16} color={colors.warn} style={{ marginRight: 6 }} />
           <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+
+      {/* Active Period Reminder Banner */}
+      {todayAlert ? (
+        <View style={styles.periodReminderCard}>
+          <View style={styles.reminderHeaderRow}>
+            <View style={styles.reminderTitleRow}>
+              <View style={styles.reminderIconCircle}>
+                <Ionicons name="notifications" size={16} color={colors.plum} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.reminderBadgeText}>ACTIVE PERIOD REMINDER</Text>
+                <Text style={styles.reminderTitleText}>{todayAlert.title || 'Cycle Reminder'}</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={handleDismissReminder}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={styles.reminderCloseBtn}
+            >
+              <Ionicons name="close" size={18} color={colors.plum} />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.reminderBodyText}>{todayAlert.text || 'Gentle check-in from Padzyra.'}</Text>
+          <View style={styles.reminderActionRow}>
+            <TouchableOpacity
+              style={styles.reminderActionBtn}
+              onPress={handleUsePad}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add-circle-outline" size={15} color={colors.white} style={{ marginRight: 4 }} />
+              <Text style={styles.reminderActionBtnText}>Log Pad Used</Text>
+            </TouchableOpacity>
+            {!isPeriodActive && (
+              <TouchableOpacity
+                style={[styles.reminderActionBtn, { backgroundColor: '#e11d48' }]}
+                onPress={handleStartCycle}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="water" size={15} color={colors.white} style={{ marginRight: 4 }} />
+                <Text style={styles.reminderActionBtnText}>Started Today</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.reminderDismissBtn}
+              onPress={handleDismissReminder}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.reminderDismissBtnText}>Done</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ) : null}
 
@@ -1519,6 +1583,94 @@ const styles = StyleSheet.create({
   checklistTitle: {
     fontSize: 13.5,
     color: colors.ink,
+    fontWeight: '600',
+  },
+
+  // Period Reminder Card
+  periodReminderCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#f4a7c5',
+    shadowColor: '#c98cb0',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  reminderHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  reminderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  reminderIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#fcebf4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  reminderBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.rose,
+    letterSpacing: 0.8,
+  },
+  reminderTitleText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.plum,
+    marginTop: 1,
+  },
+  reminderCloseBtn: {
+    padding: 4,
+  },
+  reminderBodyText: {
+    fontSize: 13,
+    color: '#5c3d52',
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  reminderActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  reminderActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.plum,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  reminderActionBtnText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  reminderDismissBtn: {
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e8c9dc',
+  },
+  reminderDismissBtnText: {
+    color: colors.plum,
+    fontSize: 12,
     fontWeight: '600',
   },
 });

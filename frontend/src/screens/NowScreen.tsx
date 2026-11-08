@@ -18,6 +18,7 @@ import { colors } from '../theme/colors';
 import { Card } from '../components/Card';
 import { PadzyraApi } from '../api/client';
 import { PeriodStoreSection, EssentialItem } from '../components/PeriodStoreSection';
+import { NativeLocationService } from '../services/nativeLocation';
 
 interface NowScreenProps {
   onOrderSuccess: () => void;
@@ -90,74 +91,19 @@ export const NowScreen: React.FC<NowScreenProps> = ({
   const requestGpsLocation = useCallback(async () => {
     setGpsLoading(true);
     try {
-      if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'GPS Location Access',
-            message: 'Padzyra uses your location to calculate walking distance and guide you to the nearest partner pharmacy.',
-            buttonPositive: 'Allow GPS',
-            buttonNegative: 'Not Now',
-          }
-        );
-
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          setLocationLabel('Location: City Center (Search area below)');
-          setUserLocation({ lat: 12.9716, lng: 77.5946 });
-          loadShopsForLocation(12.9716, 77.5946);
-          return;
-        }
-      }
-
-      // 1. Try browser / native navigator.geolocation if available
-      const geo = (globalThis as any).navigator?.geolocation;
-      let geoSuccess = false;
-      if (geo && typeof geo.getCurrentPosition === 'function') {
-        await new Promise<void>((resolve) => {
-          geo.getCurrentPosition(
-            (pos: any) => {
-              geoSuccess = true;
-              const { latitude, longitude } = pos.coords;
-              setUserLocation({ lat: latitude, lng: longitude });
-              setLocationLabel(`📍 GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`);
-              loadShopsForLocation(latitude, longitude);
-              resolve();
-            },
-            () => resolve(),
-            { enableHighAccuracy: true, timeout: 4000, maximumAge: 10000 }
-          );
-          setTimeout(() => resolve(), 4000);
-        });
-      }
-
-      if (!geoSuccess) {
-        // 2. High-accuracy Live IP Geolocation (Resolves actual device city & coordinates!)
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 4000);
-          const res = await fetch('https://ipwho.is/', { signal: controller.signal });
-          clearTimeout(timer);
-          const data = await res.json();
-          if (data && data.success && data.latitude && data.longitude) {
-            const cityText = data.city ? `📍 ${data.city}${data.region ? ', ' + data.region : ''}` : '📍 Current Location';
-            setUserLocation({ lat: data.latitude, lng: data.longitude });
-            setLocationLabel(cityText);
-            loadShopsForLocation(data.latitude, data.longitude);
-            return;
-          }
-        } catch {
-          // fallback
-        }
-
-        // Default fallback if offline
-        setUserLocation({ lat: 23.167, lng: 79.95 });
-        setLocationLabel('📍 Auto Location Active');
-        loadShopsForLocation(23.167, 79.95);
-      }
-    } catch {
-      setUserLocation({ lat: 12.9716, lng: 77.5946 });
-      setLocationLabel('GPS: Active');
-      loadShopsForLocation(12.9716, 77.5946);
+      const loc = await NativeLocationService.getCurrentLocation();
+      setUserLocation({ lat: loc.latitude, lng: loc.longitude });
+      const display = loc.displayName
+        ? `📍 ${loc.displayName}`
+        : `📍 GPS (${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°)`;
+      setLocationLabel(display);
+      loadShopsForLocation(loc.latitude, loc.longitude);
+    } catch (err: any) {
+      setLocationLabel('📍 GPS Off (Search area below)');
+      Alert.alert(
+        'Location Required',
+        err?.message || 'Could not fetch device GPS. Please enable Location in your device settings, or search your area name below.'
+      );
     } finally {
       setGpsLoading(false);
     }

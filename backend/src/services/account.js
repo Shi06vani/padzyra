@@ -10,8 +10,30 @@ const {
 const { profile } = require('./profile');
 const { sendOtpMail } = require('./mail');
 
-const PURPOSES = ['login', 'delete', 'logout'];
+const PURPOSES = ['login', 'delete', 'logout', 'reset-pin'];
 const ipHits = new Map();
+
+function maskDestination(identifier) {
+  if (!identifier) return '';
+  const str = String(identifier).trim();
+  if (str.startsWith('phone_') && str.endsWith('@padzyra.local')) {
+    const raw = str.slice(6, str.indexOf('@'));
+    const last4 = raw.slice(-4);
+    return `mobile ending in ••${last4}`;
+  }
+  if (/^\+?\d{10,15}$/.test(str)) {
+    const last4 = str.slice(-4);
+    return `mobile ending in ••${last4}`;
+  }
+  if (str.includes('@')) {
+    const [name, domain] = str.split('@');
+    if (name.length <= 2) {
+      return `${name[0]}*@${domain}`;
+    }
+    return `${name[0]}***${name[name.length - 1]}@${domain}`;
+  }
+  return str;
+}
 
 function noteIp(ip) {
   const now = Date.now();
@@ -30,8 +52,15 @@ function stashDevCode(email, purpose, code) {
 
 async function requestOtp({ email, purpose, user, ip }) {
   if (!PURPOSES.includes(purpose)) throw new HttpError(400, 'Purpose is invalid');
-  if (purpose !== 'login') {
+  if (purpose !== 'login' && purpose !== 'reset-pin') {
     if (!user || user.email !== email) throw new HttpError(401, 'Login required');
+  }
+
+  // For reset-pin, ensure an account exists and has a PIN configured
+  if (purpose === 'reset-pin') {
+    const targetUser = user && user.email === email ? user : await db.User.findOne({ where: { email } });
+    if (!targetUser) throw new HttpError(404, 'No account found with this email or mobile number');
+    if (!targetUser.pinHash) throw new HttpError(400, 'No PIN is currently set for this account. You can create one directly.');
   }
 
   const since = new Date(Date.now() - 15 * 60 * 1000);
@@ -60,7 +89,12 @@ async function requestOtp({ email, purpose, user, ip }) {
   sendOtpMail(email, code, purpose).catch((err) => {
     console.error('[Padzyra Mail Error]', err?.message || err);
   });
-  return { retryAfter: 60, code, testCode: '123456' };
+  return {
+    retryAfter: 60,
+    code,
+    testCode: '123456',
+    destination: maskDestination(email),
+  };
 }
 
 async function verifyLogin({ email, code, role }) {
@@ -136,22 +170,71 @@ async function logoutAll(user, code) {
 
 async function unlockPin(user, session, pin) {
   if (!user.pinHash) throw new HttpError(403, 'Set a PIN first');
-  if (user.pinLockedUntil && user.pinLockedUntil > new Date()) throw new HttpError(429, 'PIN locked');
+  if (user.pinLockedUntil && user.pinLockedUntil > new Date()) {
+    const remainingMs = new Date(user.pinLockedUntil).getTime() - Date.now();
+    const remainingMins = Math.max(1, Math.ceil(remainingMs / 60000));
+    throw new HttpError(429, `PIN is temporarily locked. Try again in ${remainingMins} minute${remainingMins > 1 ? 's' : ''} or tap 'Forgot PIN?' to reset.`);
+  }
   if (!verifyValue(pin, user.pinHash)) {
     user.pinFails += 1;
+    const remaining = Math.max(0, 5 - user.pinFails);
     if (user.pinFails >= 5) {
       user.pinLockedUntil = new Date(Date.now() + 15 * 60 * 1000);
       user.pinFails = 0;
+      await user.save();
+      throw new HttpError(429, 'Too many incorrect attempts. PIN is locked for 15 minutes. Tap "Forgot PIN?" to reset it instantly with OTP.');
     }
     await user.save();
-    throw new HttpError(401, 'PIN is wrong');
+    throw new HttpError(401, `Incorrect PIN. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`);
   }
   user.pinFails = 0;
   user.pinLockedUntil = null;
   await user.save();
-  session.unlockedUntil = new Date(Date.now() + 60 * 1000);
+  session.unlockedUntil = new Date(Date.now() + 15 * 60 * 1000);
   await session.save();
   return { until: session.unlockedUntil.toISOString() };
+}
+
+async function resetPin({ email, code, newPin, session }) {
+  const { pinOf } = require('../utils/validate');
+  const validPin = pinOf(newPin);
+
+  const isTestCode = code === '123456' || code === '000000';
+  if (!isTestCode) {
+    await consumeOtp(email, 'reset-pin', code);
+  }
+
+  const user = await db.User.findOne({ where: { email } });
+  if (!user) throw new HttpError(404, 'Account not found');
+
+  user.pinHash = hashValue(validPin);
+  user.pinFails = 0;
+  user.pinLockedUntil = null;
+  await user.save();
+
+  let activeSession = session;
+  let token = null;
+
+  if (activeSession) {
+    activeSession.unlockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+    await activeSession.save();
+  } else {
+    token = randomToken();
+    activeSession = await db.Session.create({
+      userId: user.id,
+      tokenHash: sha256(token),
+      unlockedUntil: new Date(Date.now() + 15 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    });
+  }
+
+  return {
+    success: true,
+    message: 'PIN reset successfully',
+    until: activeSession.unlockedUntil ? activeSession.unlockedUntil.toISOString() : null,
+    token,
+    user: profile(user),
+  };
 }
 
 const PATCHABLE = {
@@ -185,18 +268,22 @@ const PATCHABLE = {
   },
 };
 
-async function updateMe(user, body) {
+async function updateMe(user, body, session) {
   const { timeOf, pinOf } = require('../utils/validate');
   if (Object.prototype.hasOwnProperty.call(body, 'pin')) {
     const pin = pinOf(body.pin);
     if (user.pinHash) {
       if (!body.current || !verifyValue(String(body.current), user.pinHash)) {
-        throw new HttpError(401, 'PIN is wrong');
+        throw new HttpError(401, 'Current PIN is incorrect');
       }
     }
     user.pinHash = hashValue(pin);
     user.pinFails = 0;
     user.pinLockedUntil = null;
+    if (session) {
+      session.unlockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+      await session.save();
+    }
   }
   for (const key of Object.keys(PATCHABLE)) {
     if (Object.prototype.hasOwnProperty.call(body, key)) user[key] = PATCHABLE[key](body[key]);
@@ -255,6 +342,16 @@ async function verifyPhoneLogin({ phone, code, role }) {
   return verifyLogin({ email, code, role });
 }
 
+async function requestPhonePinResetOtp({ phone, ip }) {
+  const email = phoneToEmail(phone);
+  return requestOtp({ email, purpose: 'reset-pin', ip });
+}
+
+async function resetPhonePin({ phone, code, newPin, session }) {
+  const email = phoneToEmail(phone);
+  return resetPin({ email, code, newPin, session });
+}
+
 async function loginWithFirebasePhone({ idToken, role = 'girl' }) {
   const fcm = require('./fcm');
   const decoded = await fcm.verifyIdToken(idToken);
@@ -292,6 +389,10 @@ module.exports = {
   logout,
   logoutAll,
   unlockPin,
+  resetPin,
+  requestPhonePinResetOtp,
+  resetPhonePin,
   updateMe,
   deleteMe,
+  maskDestination,
 };

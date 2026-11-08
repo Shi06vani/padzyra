@@ -27,6 +27,7 @@ import { PadzyraApi } from './src/api/client';
 import { AppLockProvider, useAppLock } from './src/context/AppLockContext';
 import { AppLockScreen } from './src/screens/AppLockScreen';
 import { EmergencyScreen } from './src/screens/EmergencyScreen';
+import { PushNotificationService } from './src/services/pushNotificationService';
 
 type AppFlowState = 'loading' | 'login' | 'otp' | 'pinLock' | 'main';
 
@@ -37,6 +38,7 @@ function AppContent() {
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
   const [userRole, setUserRole] = useState<'girl' | 'shop'>('girl');
   const [isSettingPin, setIsSettingPin] = useState(false);
+  const [hasExistingPin, setHasExistingPin] = useState(false);
   const [currentTab, setCurrentTab] = useState<TabKey>('home');
   const [showEmergency, setShowEmergency] = useState(false);
   const { isLocked } = useAppLock();
@@ -52,9 +54,11 @@ function AppContent() {
       if (status && status.authenticated) {
         setUserRole(status.role || 'girl');
         setCurrentTab(status.role === 'shop' ? 'shop' : 'home');
+        if (status.email) setAuthIdentifier(status.email);
 
         if (status.role === 'girl' && status.pinSet && !status.pinUnlocked) {
           setIsSettingPin(false);
+          setHasExistingPin(true);
           setFlowState('pinLock');
         } else {
           setFlowState('main');
@@ -93,6 +97,15 @@ function AppContent() {
         const me = await PadzyraApi.getMe();
         if (!me.pin) {
           setIsSettingPin(true);
+          setHasExistingPin(false);
+          setFlowState('pinLock');
+          return;
+        }
+
+        const status = await PadzyraApi.getAuthStatus();
+        if (status.pinSet && !status.pinUnlocked) {
+          setIsSettingPin(false);
+          setHasExistingPin(true);
           setFlowState('pinLock');
           return;
         }
@@ -106,7 +119,15 @@ function AppContent() {
   // PIN unlocked / set
   const handlePinUnlocked = () => {
     setIsSettingPin(false);
+    setHasExistingPin(true);
     setFlowState('main');
+  };
+
+  // Set / Change PIN requested from Settings or flow
+  const handleSetPinRequested = (existing = false) => {
+    setIsSettingPin(true);
+    setHasExistingPin(existing);
+    setFlowState('pinLock');
   };
 
   // Logout
@@ -115,7 +136,7 @@ function AppContent() {
     setCurrentTab('home');
   };
 
-  // Forgot PIN: Log out session so user can re-verify identity via OTP
+  // Forgot PIN fallback
   const handleForgotPin = async () => {
     try {
       await PadzyraApi.logout();
@@ -155,8 +176,12 @@ function AppContent() {
       {flowState === 'pinLock' && (
         <PinLockScreen
           isSettingPin={isSettingPin}
+          hasExistingPin={hasExistingPin}
+          userEmail={authIdentifier}
           onUnlocked={handlePinUnlocked}
           onForgotPin={handleForgotPin}
+          onLogout={handleLogout}
+          onCancel={isSettingPin ? () => setFlowState('main') : undefined}
         />
       )}
 
@@ -181,10 +206,7 @@ function AppContent() {
                   {currentTab === 'settings' && (
                     <SettingsScreen
                       onLogout={handleLogout}
-                      onSetPinRequested={() => {
-                        setIsSettingPin(true);
-                        setFlowState('pinLock');
-                      }}
+                      onSetPinRequested={(hasPin) => handleSetPinRequested(Boolean(hasPin))}
                     />
                   )}
                 </>
@@ -197,6 +219,7 @@ function AppContent() {
                       onNavigateToTab={(tab) => setCurrentTab(tab)}
                       onRequestPin={() => {
                         setIsSettingPin(false);
+                        setHasExistingPin(true);
                         setFlowState('pinLock');
                       }}
                     />
@@ -215,10 +238,7 @@ function AppContent() {
                   {currentTab === 'settings' && (
                     <SettingsScreen
                       onLogout={handleLogout}
-                      onSetPinRequested={() => {
-                        setIsSettingPin(true);
-                        setFlowState('pinLock');
-                      }}
+                      onSetPinRequested={(hasPin) => handleSetPinRequested(Boolean(hasPin))}
                       onNavigateToActivity={() => setCurrentTab('activity')}
                     />
                   )}

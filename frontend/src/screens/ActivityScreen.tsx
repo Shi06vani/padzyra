@@ -15,6 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors } from '../theme/colors';
 import { Card } from '../components/Card';
 import { PadzyraApi } from '../api/client';
+import { PushNotificationService } from '../services/pushNotificationService';
 
 interface ActivityScreenProps {
   onNavigateToNow?: () => void;
@@ -32,6 +33,7 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
   const [suppliesHistory, setSuppliesHistory] = useState<any[]>([]);
   const [notificationHistory, setNotificationHistory] = useState<any[]>([]);
   const [todayAlert, setTodayAlert] = useState<any>(null);
+  const [fcmStatus, setFcmStatus] = useState<any>(null);
   const [sendingReminder, setSendingReminder] = useState(false);
 
   // Copy code feedback
@@ -45,17 +47,19 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
 
   const loadData = useCallback(async () => {
     try {
-      const [ordersData, suppData, notifData, alertData] = await Promise.all([
+      const [ordersData, suppData, notifData, alertData, statusData] = await Promise.all([
         PadzyraApi.getOrders().catch(() => []),
         PadzyraApi.getSuppliesHistory(50).catch(() => []),
         PadzyraApi.getNotificationHistory().catch(() => []),
         PadzyraApi.getTodayAlert().catch(() => null),
+        PadzyraApi.getFcmStatus().catch(() => null),
       ]);
 
       setOrders(ordersData || []);
       setSuppliesHistory(suppData || []);
       setNotificationHistory(notifData || []);
       setTodayAlert(alertData || null);
+      setFcmStatus(statusData || null);
     } catch {
       // Graceful fallback
     } finally {
@@ -129,21 +133,45 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
     }
   };
 
+  const handleRegisterDevice = async () => {
+    try {
+      const res = await PushNotificationService.registerDeviceToken();
+      Alert.alert(
+        res.success ? 'Device Registered! 📱' : 'Registration Notice',
+        res.message
+      );
+      const status = await PadzyraApi.getFcmStatus().catch(() => null);
+      setFcmStatus(status || null);
+    } catch (err: any) {
+      Alert.alert('Registration Error', err?.message || 'Could not register device');
+    }
+  };
+
   const handleSendReminder = async (kind: string = 'test') => {
     setSendingReminder(true);
     try {
-      const res = await PadzyraApi.sendReminderNotification({ kind });
-      Alert.alert(
-        'Reminder Dispatched! 🔔',
-        `"${res.title}"\n${res.body}\n\nFirebase Cloud Messaging push notification sent to registered device(s).`,
-        [{ text: 'OK' }]
-      );
-      const [notifData, alertData] = await Promise.all([
+      const res = await PushNotificationService.dispatchReminder(kind);
+      const fcmInfo = res.fcmResult;
+      const count = fcmInfo?.successCount ?? 0;
+      const fail = fcmInfo?.failureCount ?? 0;
+      const noTokens = fcmInfo?.noTokens;
+
+      let detailMsg = `"${res.title}"\n${res.body}`;
+      if (noTokens) {
+        detailMsg += `\n\n📱 Device Registered: No device tokens were found on this account previously, so this device was automatically registered! Push notifications will now arrive.`;
+      } else {
+        detailMsg += `\n\n🚀 Firebase Cloud Messaging: Successfully dispatched to ${count} active device(s)${fail > 0 ? `, ${fail} failed` : ''}.`;
+      }
+
+      Alert.alert('Period Reminder Dispatched! 🔔', detailMsg, [{ text: 'OK' }]);
+      const [notifData, alertData, statusData] = await Promise.all([
         PadzyraApi.getNotificationHistory().catch(() => []),
         PadzyraApi.getTodayAlert().catch(() => null),
+        PadzyraApi.getFcmStatus().catch(() => null),
       ]);
       setNotificationHistory(notifData || []);
       setTodayAlert(alertData || null);
+      setFcmStatus(statusData || null);
     } catch (err: any) {
       Alert.alert('Reminder Error', err?.message || 'Could not send reminder');
     } finally {
@@ -880,16 +908,37 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
             <View style={styles.cardHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name="notifications-circle" size={18} color={colors.rose} style={{ marginRight: 6 }} />
-                <Text style={styles.cardHeader}>FIREBASE CLOUD REMINDERS</Text>
+                <Text style={styles.cardHeader}>FIREBASE PERIOD REMINDERS</Text>
               </View>
-              <View style={[styles.fcmBadge, { backgroundColor: '#e8f5e9' }]}>
-                <Ionicons name="flash-outline" size={11} color="#2e7d32" style={{ marginRight: 3 }} />
-                <Text style={[styles.fcmBadgeText, { color: '#2e7d32' }]}>FCM Active</Text>
+              <View style={[styles.fcmBadge, { backgroundColor: fcmStatus?.firebaseInitialized !== false ? '#e8f5e9' : '#fff3e0' }]}>
+                <Ionicons name="flash-outline" size={11} color={fcmStatus?.firebaseInitialized !== false ? '#2e7d32' : '#e65100'} style={{ marginRight: 3 }} />
+                <Text style={[styles.fcmBadgeText, { color: fcmStatus?.firebaseInitialized !== false ? '#2e7d32' : '#e65100' }]}>
+                  {fcmStatus?.firebaseInitialized !== false ? 'FCM Connected' : 'FCM Ready'}
+                </Text>
               </View>
             </View>
             <Text style={styles.mutedText}>
-              Send or test real-time reminder notifications delivered via Firebase Cloud Messaging.
+              Padzyra sends automated push notifications for pad change intervals, upcoming periods, hydration, and bedtime protection.
             </Text>
+
+            {/* Device Registration Banner */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fcebf4', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, marginTop: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+                <Ionicons name="phone-portrait-outline" size={15} color={colors.plum} style={{ marginRight: 6 }} />
+                <Text style={{ fontSize: 12, color: colors.plum, fontWeight: '600' }}>
+                  {fcmStatus?.tokensCount != null
+                    ? `${fcmStatus.tokensCount} device(s) registered`
+                    : 'Device registered for alerts'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleRegisterDevice}
+                activeOpacity={0.7}
+                style={{ paddingVertical: 4, paddingHorizontal: 8, backgroundColor: colors.white, borderRadius: 8, borderWidth: 1, borderColor: '#f4a7c5' }}
+              >
+                <Text style={{ fontSize: 11, color: colors.rose, fontWeight: '700' }}>Register Device</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={{ marginTop: 12 }}>
               <TouchableOpacity
@@ -908,14 +957,27 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
                 )}
               </TouchableOpacity>
 
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.plum, marginTop: 4, marginBottom: 6 }}>
+                Trigger Real-Time Period Reminders:
+              </Text>
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 <TouchableOpacity
-                  style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
-                  onPress={() => handleSendReminder('lunch')}
+                  style={[styles.trustPill, { borderColor: '#e11d48', backgroundColor: '#fff1f2', paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('eve')}
                   disabled={sendingReminder}
                 >
-                  <Ionicons name="water-outline" size={13} color={colors.plum} />
-                  <Text style={[styles.trustPillText, { color: colors.plum }]}>Lunch Hydration</Text>
+                  <Ionicons name="water" size={13} color="#e11d48" />
+                  <Text style={[styles.trustPillText, { color: '#e11d48', fontWeight: '700' }]}>Period Tomorrow</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('pack')}
+                  disabled={sendingReminder}
+                >
+                  <Ionicons name="briefcase-outline" size={13} color={colors.plum} />
+                  <Text style={[styles.trustPillText, { color: colors.plum }]}>In 2 Days</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -929,11 +991,11 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
 
                 <TouchableOpacity
                   style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
-                  onPress={() => handleSendReminder('heat')}
+                  onPress={() => handleSendReminder('lunch')}
                   disabled={sendingReminder}
                 >
-                  <Ionicons name="flame-outline" size={13} color={colors.plum} />
-                  <Text style={[styles.trustPillText, { color: colors.plum }]}>Warm Compress</Text>
+                  <Ionicons name="restaurant-outline" size={13} color={colors.plum} />
+                  <Text style={[styles.trustPillText, { color: colors.plum }]}>Lunchtime Check</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -943,6 +1005,33 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ onNavigateToNow 
                 >
                   <Ionicons name="moon-outline" size={13} color={colors.plum} />
                   <Text style={[styles.trustPillText, { color: colors.plum }]}>Night Pad</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('heat')}
+                  disabled={sendingReminder}
+                >
+                  <Ionicons name="flame-outline" size={13} color={colors.plum} />
+                  <Text style={[styles.trustPillText, { color: colors.plum }]}>Warm Compress</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.trustPill, { borderColor: colors.rose, paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('pms')}
+                  disabled={sendingReminder}
+                >
+                  <Ionicons name="heart-outline" size={13} color={colors.plum} />
+                  <Text style={[styles.trustPillText, { color: colors.plum }]}>PMS Self-Care</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.trustPill, { borderColor: '#d97706', paddingVertical: 6 }]}
+                  onPress={() => handleSendReminder('low')}
+                  disabled={sendingReminder}
+                >
+                  <Ionicons name="alert-circle-outline" size={13} color="#d97706" />
+                  <Text style={[styles.trustPillText, { color: "#d97706" }]}>Low Pad Alert</Text>
                 </TouchableOpacity>
               </View>
             </View>
