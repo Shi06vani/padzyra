@@ -20,7 +20,6 @@ function instruction(state, hm, user) {
   if (state.late) return 'late';
   if (state.move) return 'move';
   if (state.low) return 'low';
-  if (state.tripSoon) return 'trip';
   return null;
 }
 
@@ -51,9 +50,9 @@ function dashboard(state, hm, user) {
 const CHECKLIST = ['Day pad', 'Night pad', 'Liner', 'Dark underwear', 'Pain relief', 'Disposal bag', 'Hot water bag'];
 
 function checklist(state) {
-  const due = state.tripSoon || (state.inDays != null && state.inDays >= 0 && state.inDays <= 2);
+  const due = state.inDays != null && state.inDays >= 0 && state.inDays <= 2;
   if (!due) return [];
-  return state.tripSoon ? [...CHECKLIST, 'Extra pads'] : [...CHECKLIST];
+  return [...CHECKLIST];
 }
 
 module.exports = { instruction, pushKind, dashboard, checklist };

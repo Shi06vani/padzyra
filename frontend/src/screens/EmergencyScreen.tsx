@@ -104,14 +104,59 @@ export const EmergencyScreen: React.FC<EmergencyScreenProps> = ({
         }
       }
 
-      // Default Bengaluru hub coordinates for seamless dev/fallback
-      const defaultLat = 12.9716;
-      const defaultLng = 77.5946;
-      setUserCoords({ lat: defaultLat, lng: defaultLng });
-      setLocationLabel('Current Location (~12.97° N, 77.59° E)');
-      loadToilets(defaultLat, defaultLng);
-      loadShops(defaultLat, defaultLng, productCategory);
-      checkDelivery(defaultLat, defaultLng);
+      // 1. Try browser / native navigator.geolocation if available
+      const geo = (globalThis as any).navigator?.geolocation;
+      let geoSuccess = false;
+      if (geo && typeof geo.getCurrentPosition === 'function') {
+        await new Promise<void>((resolve) => {
+          geo.getCurrentPosition(
+            (pos: any) => {
+              geoSuccess = true;
+              const { latitude, longitude } = pos.coords;
+              setUserCoords({ lat: latitude, lng: longitude });
+              setLocationLabel(`📍 GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`);
+              loadToilets(latitude, longitude);
+              loadShops(latitude, longitude, productCategory);
+              checkDelivery(latitude, longitude);
+              resolve();
+            },
+            () => resolve(),
+            { enableHighAccuracy: true, timeout: 4000, maximumAge: 10000 }
+          );
+          setTimeout(() => resolve(), 4000);
+        });
+      }
+
+      if (!geoSuccess) {
+        // 2. High-accuracy Live IP Geolocation (Resolves actual device city & coordinates!)
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 4000);
+          const res = await fetch('https://ipwho.is/', { signal: controller.signal });
+          clearTimeout(timer);
+          const data = await res.json();
+          if (data && data.success && data.latitude && data.longitude) {
+            const cityText = data.city ? `📍 ${data.city}${data.region ? ', ' + data.region : ''}` : '📍 Current Location';
+            setUserCoords({ lat: data.latitude, lng: data.longitude });
+            setLocationLabel(cityText);
+            loadToilets(data.latitude, data.longitude);
+            loadShops(data.latitude, data.longitude, productCategory);
+            checkDelivery(data.latitude, data.longitude);
+            return;
+          }
+        } catch {
+          // fallback
+        }
+
+        // Default fallback
+        const defaultLat = 23.167;
+        const defaultLng = 79.95;
+        setUserCoords({ lat: defaultLat, lng: defaultLng });
+        setLocationLabel('📍 Auto Location Active');
+        loadToilets(defaultLat, defaultLng);
+        loadShops(defaultLat, defaultLng, productCategory);
+        checkDelivery(defaultLat, defaultLng);
+      }
     } catch {
       setLocationLabel('GPS unavailable (Enter location below)');
     } finally {

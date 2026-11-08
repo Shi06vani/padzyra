@@ -133,28 +133,6 @@ export async function apiRequest<T = any>(
   return (json.data !== undefined ? json.data : (json as any)) as T;
 }
 
-export interface TripChecklistItem {
-  id: string;
-  name: string;
-  category: 'essentials' | 'comfort' | 'medication' | 'custom';
-  packed: boolean;
-  quantity?: number;
-  custom?: boolean;
-  description?: string;
-}
-
-export interface TripItem {
-  id: string;
-  start: string;
-  end: string;
-  name?: string | null;
-  destination?: string | null;
-  activities?: string[];
-  checklist?: TripChecklistItem[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export const PadzyraApi = {
   // Auth
   async requestOtp(email: string, purpose: string = 'login') {
@@ -561,52 +539,6 @@ export const PadzyraApi = {
     }>('/cycles', {
       method: 'POST',
       body,
-    });
-  },
-
-  // Trips / Period Travel Planner
-  async getTrips() {
-    return apiRequest<TripItem[]>('/trips');
-  },
-
-  async getTrip(id: string) {
-    return apiRequest<TripItem>(`/trips/${id}`);
-  },
-
-  async addTrip(data: {
-    start: string;
-    end: string;
-    name?: string | null;
-    destination?: string | null;
-    activities?: string[];
-    checklist?: TripChecklistItem[];
-  }) {
-    return apiRequest<TripItem>('/trips', {
-      method: 'POST',
-      body: data,
-    });
-  },
-
-  async updateTrip(
-    id: string,
-    updates: {
-      start?: string;
-      end?: string;
-      name?: string | null;
-      destination?: string | null;
-      activities?: string[];
-      checklist?: TripChecklistItem[];
-    }
-  ) {
-    return apiRequest<TripItem>(`/trips/${id}`, {
-      method: 'PATCH',
-      body: updates,
-    });
-  },
-
-  async deleteTrip(id: string) {
-    return apiRequest(`/trips/${id}`, {
-      method: 'DELETE',
     });
   },
 

@@ -45,7 +45,10 @@ async function nearby(user, { lat, lng, area }) {
   });
 
   if (hasPoint) {
-    items = items.filter((item) => item.saved || item.km <= 15);
+    const nearbyOnly = items.filter((item) => item.saved || item.km <= 25);
+    if (nearbyOnly.length > 0) {
+      items = nearbyOnly;
+    }
   }
 
   items.sort((a, b) => Number(b.saved) - Number(a.saved) || (a.km ?? 999) - (b.km ?? 999) || a.name.localeCompare(b.name));

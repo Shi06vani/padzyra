@@ -109,26 +109,50 @@ export const NowScreen: React.FC<NowScreenProps> = ({
         }
       }
 
+      // 1. Try browser / native navigator.geolocation if available
       const geo = (globalThis as any).navigator?.geolocation;
+      let geoSuccess = false;
       if (geo && typeof geo.getCurrentPosition === 'function') {
-        geo.getCurrentPosition(
-          (pos: any) => {
-            const { latitude, longitude } = pos.coords;
-            setUserLocation({ lat: latitude, lng: longitude });
-            setLocationLabel(`GPS: ${latitude.toFixed(3)}, ${longitude.toFixed(3)} · High Precision`);
-            loadShopsForLocation(latitude, longitude);
-          },
-          () => {
-            setUserLocation({ lat: 12.9716, lng: 77.5946 });
-            setLocationLabel('GPS: Default Location · Bangalore');
-            loadShopsForLocation(12.9716, 77.5946);
-          },
-          { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
-        );
-      } else {
-        setUserLocation({ lat: 12.9716, lng: 77.5946 });
-        setLocationLabel('GPS: Active');
-        loadShopsForLocation(12.9716, 77.5946);
+        await new Promise<void>((resolve) => {
+          geo.getCurrentPosition(
+            (pos: any) => {
+              geoSuccess = true;
+              const { latitude, longitude } = pos.coords;
+              setUserLocation({ lat: latitude, lng: longitude });
+              setLocationLabel(`📍 GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`);
+              loadShopsForLocation(latitude, longitude);
+              resolve();
+            },
+            () => resolve(),
+            { enableHighAccuracy: true, timeout: 4000, maximumAge: 10000 }
+          );
+          setTimeout(() => resolve(), 4000);
+        });
+      }
+
+      if (!geoSuccess) {
+        // 2. High-accuracy Live IP Geolocation (Resolves actual device city & coordinates!)
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 4000);
+          const res = await fetch('https://ipwho.is/', { signal: controller.signal });
+          clearTimeout(timer);
+          const data = await res.json();
+          if (data && data.success && data.latitude && data.longitude) {
+            const cityText = data.city ? `📍 ${data.city}${data.region ? ', ' + data.region : ''}` : '📍 Current Location';
+            setUserLocation({ lat: data.latitude, lng: data.longitude });
+            setLocationLabel(cityText);
+            loadShopsForLocation(data.latitude, data.longitude);
+            return;
+          }
+        } catch {
+          // fallback
+        }
+
+        // Default fallback if offline
+        setUserLocation({ lat: 23.167, lng: 79.95 });
+        setLocationLabel('📍 Auto Location Active');
+        loadShopsForLocation(23.167, 79.95);
       }
     } catch {
       setUserLocation({ lat: 12.9716, lng: 77.5946 });

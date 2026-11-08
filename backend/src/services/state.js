@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const db = require('../models');
 const { decryptJson } = require('../utils/cryptoBox');
-const { todayISO, addDays } = require('../utils/dates');
+const { todayISO } = require('../utils/dates');
 const { summarize } = require('./predict');
 
 function viewCycle(row) {
@@ -23,12 +23,9 @@ async function buildState(user) {
   const today = todayISO();
   const cycles = await loadCycles(user.id);
   const supplies = await db.Supply.findAll({ where: { userId: user.id } });
-  const trips = await db.Trip.findAll({ where: { userId: user.id } });
   const summary = summarize(cycles, user, today);
   const bag = qty(supplies, 'bag', 'day') + qty(supplies, 'bag', 'night');
   const home = qty(supplies, 'home', 'day') + qty(supplies, 'home', 'night');
-  const soon = addDays(today, 2);
-  const tripSoon = trips.some((trip) => trip.startDate <= soon && trip.endDate >= today);
   return {
     ...summary,
     today,
@@ -37,7 +34,6 @@ async function buildState(user) {
     home,
     low: qty(supplies, 'bag', 'day') < 2 || qty(supplies, 'bag', 'night') < 2,
     move: bag === 0 && home > 0 ? Math.min(2, home) : 0,
-    tripSoon,
   };
 }
 

@@ -42,7 +42,6 @@ const FOCUS_TEXTS: Record<string, string> = {
   late: 'Cycle is delayed. Normal fluctuations happen, consult a doctor if prolonged.',
   move: 'Transfer fresh pads from home to your bag tonight.',
   low: 'Bag pad count is low. Restock recommended.',
-  trip: 'Packing extra pads for your travel plans.',
   follow: 'Bag supply still low. Refill today.',
 };
 

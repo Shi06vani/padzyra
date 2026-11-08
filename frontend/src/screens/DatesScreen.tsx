@@ -15,10 +15,8 @@ import { Card } from '../components/Card';
 import { InputField } from '../components/InputField';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { PadzyraApi } from '../api/client';
-import { TripsScreen } from './TripsScreen';
 
 export const DatesScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'cycles' | 'trips'>('cycles');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [cycles, setCycles] = useState<any[]>([]);
@@ -46,10 +44,8 @@ export const DatesScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'cycles') {
-      loadCycles();
-    }
-  }, [activeTab, loadCycles]);
+    loadCycles();
+  }, [loadCycles]);
 
   const handleSaveCycle = async () => {
     if (!startDate.trim()) {
@@ -168,49 +164,10 @@ export const DatesScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.topHeader}>
         <Text style={styles.screenTitle}>Cycle & Calendar</Text>
-        <Text style={styles.screenSubtitle}>Track flow rhythm, length & travel planning</Text>
+        <Text style={styles.screenSubtitle}>Track flow rhythm, length & cycle predictions</Text>
       </View>
 
-      {/* Segmented Tab Pill */}
-      <View style={styles.segmentContainer}>
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'cycles' && styles.segmentBtnActive]}
-          activeOpacity={0.8}
-          onPress={() => setActiveTab('cycles')}
-        >
-          <Ionicons
-            name="calendar-outline"
-            size={16}
-            color={activeTab === 'cycles' ? colors.white : colors.plum}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={[styles.segmentText, activeTab === 'cycles' && styles.segmentTextActive]}>
-            Cycle History
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.segmentBtn, activeTab === 'trips' && styles.segmentBtnActive]}
-          activeOpacity={0.8}
-          onPress={() => setActiveTab('trips')}
-        >
-          <Ionicons
-            name="airplane-outline"
-            size={16}
-            color={activeTab === 'trips' ? colors.white : colors.plum}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={[styles.segmentText, activeTab === 'trips' && styles.segmentTextActive]}>
-            Trip Planner
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {activeTab === 'trips' ? (
-        <TripsScreen />
-      ) : (
-        <>
-          {/* Cycle Metrics Strip */}
+      {/* Cycle Metrics Strip */}
           <View style={styles.metricsRow}>
             <View style={styles.metricCard}>
               <View style={styles.metricIconWrap}>
@@ -410,8 +367,6 @@ export const DatesScreen: React.FC = () => {
               )}
             </Card>
           )}
-        </>
-      )}
 
       {/* Floating dock spacer */}
       <View style={{ height: 96 }} />
@@ -445,39 +400,6 @@ const styles = StyleSheet.create({
     color: colors.rose,
     marginTop: 2,
     fontWeight: '500',
-  },
-  segmentContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 4,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(243, 213, 228, 0.7)',
-    shadowColor: colors.plum,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  segmentBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 9,
-    borderRadius: 12,
-  },
-  segmentBtnActive: {
-    backgroundColor: colors.plum,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.plum,
-  },
-  segmentTextActive: {
-    color: colors.white,
   },
 
   // Metrics Row
